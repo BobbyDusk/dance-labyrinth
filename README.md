@@ -11,7 +11,7 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
 
 ## JSON song file
 
-- *notes* - time in ms, direction with 0 = left, 1 = down, 2 = up, 3 = right
+- *arrows* - beat, subbeat, direction with 0 = left, 1 = down, 2 = up, 3 = right
 
 ## TODO
 

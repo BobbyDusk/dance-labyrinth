@@ -1,4 +1,5 @@
 import { Application, Assets, Graphics, Sprite, Ticker, BitmapText, TextStyle, type TextStyleOptions } from 'pixi.js';
+import song from './assets/song.json' assert { type: 'json' };
 
 export enum Direction
 {
@@ -132,7 +133,7 @@ function updateTime(ticker: Ticker) {
     time += ticker.deltaMS
     let timeInSeconds = time / 1000
     let timeInMinutes = timeInSeconds / 60
-    beat = Math.floor(timeInMinutes * bpm)
+    beat = Math.floor(timeInMinutes * bpm) - 5
     subbeat = Math.floor(((timeInMinutes * bpm) - beat) * numSubbeats)
 }
 
