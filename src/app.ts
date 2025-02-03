@@ -4,6 +4,7 @@ import { global } from './global';
 import { createArrowSprite, Direction } from './Arrow';
 import preloadAssets from "./assets";
 import { Arrow } from './Arrow';
+import { setupInput } from "./input"
 
 
 
@@ -12,7 +13,7 @@ let numSubbeats = 64;
 let marginTop = 100;
 let preBeats = 6;
 let bpm = 120
-let time = getStartTime()
+let startTime = getStartTime()
 let beat = 0
 let subbeat = 0
 let index = 0
@@ -45,6 +46,7 @@ export async function setup(container: HTMLElement) {
 
     // Listen for animate update
     global.app.ticker.add(loop);
+    setupInput();
 };
 
 async function createLines() {
@@ -126,15 +128,28 @@ async function loop(ticker: Ticker) {
     updateInfo(ticker);
 }
 
+export function press(direction: Direction) {
+    let pressTime = Date.now() - startTime
+    let pressBeat = Math.floor(pressTime / (60000 / bpm))
+    let pressSubbeat = Math.floor((pressTime % (60000 / bpm)) / (60000 / bpm / numSubbeats))
+    console.log(pressBeat, pressSubbeat, direction)
+    //let arrow = arrowsQueue.find(arrow => arrow.beat == pressBeat && arrow.subbeat == pressSubbeat && arrow.direction == direction)
+    //if (arrow) {
+    //    arrow.destruct()
+    //    arrowsQueue.splice(arrowsQueue.indexOf(arrow), 1)
+    //    console.log(`pressed arrow: ${arrow.toString()}`)
+    //}
+}
+
 function getStartTime() {
-    return -1 * preBeats * 1000 * 60 / bpm
+    return Date.now() + preBeats * 1000 * 60 / bpm
 }
 
 function reset() {
     console.log("Resetting.")
     beat = 0
     subbeat = 0
-    time = getStartTime()
+    startTime = getStartTime()
     noMoreNotes = false
     songEnded = false
     arrowsQueue.forEach(arrow => {
@@ -144,9 +159,12 @@ function reset() {
     index = 0
 }
 
+function getTimeSinceStart(): number {
+    return Date.now() - startTime
+}
+
 function updateTime(ticker: Ticker) {
-    time += ticker.deltaMS
-    let timeInSeconds = time / 1000
+    let timeInSeconds = getTimeSinceStart() / 1000
     let timeInMinutes = timeInSeconds / 60
     beat = Math.floor(timeInMinutes * bpm)
     subbeat = Math.floor(((timeInMinutes * bpm) - beat) * numSubbeats)
@@ -210,7 +228,7 @@ function updateInfo(ticker: Ticker) {
     updateFps(ticker)
     fpsText.text = Math.round(fps)
     let timeString = ""
-    let seconds = time / 1000
+    let seconds = getTimeSinceStart() / 1000
     if (Math.ceil(seconds) <= 0) {
         seconds = Math.ceil(Math.abs(seconds))
         if (seconds < 10) {
@@ -234,5 +252,4 @@ function updateInfo(ticker: Ticker) {
         subbeatString = "0" + subbeat
     }
     subbeatText.text = subbeatString
-
 }
