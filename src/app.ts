@@ -1,129 +1,122 @@
-import { Application, Assets, Graphics, Sprite, Ticker, BitmapText, TextStyle, type TextStyleOptions } from 'pixi.js';
+import { Application, Assets, Graphics, Sprite, Ticker, BitmapText, TextStyle, type TextStyleOptions, Color } from 'pixi.js';
 import song from './assets/song.json' assert { type: 'json' };
+import { global } from './global';
+import { createArrowSprite, Direction } from './Arrow';
+import preloadAssets from "./assets";
+import { Arrow } from './Arrow';
 
-export enum Direction
-{
-    Left = 0,
-    Down = 1,
-    Up = 2,
-    Right = 3
-}
 
-export let app = new Application();
 
 let beatsVisible = 5;
-let numSubbeats = 16
+let numSubbeats = 64;
+let marginTop = 100;
+let preBeats = 6;
+let bpm = 120
+let time = -1 * preBeats * 1000 * 60 / bpm
+let beat = 0
+let subbeat = 0
+let index = 0
+let arrowsQueue: Arrow[] = []
+let noMoreNotes = false
+let songEnded = false
+
 
 export async function setup(container: HTMLElement) {
-    await app.init({width: 600, height: 1000 });
-    container.appendChild(app.canvas);
-
-    const arrows = await Promise.all([
-        createArrow(Direction.Left),
-        createArrow(Direction.Down),
-        createArrow(Direction.Up),
-        createArrow(Direction.Right),
-    ])
-
-    arrows.forEach((arrow, index) => {
-        arrow.x = app.screen.width / 8 * (index * 2 + 1);
-        arrow.y = 100;
-        app.stage.addChild(arrow);
-    })
+    await global.app.init({ width: 600, height: 1000 });
+    await preloadAssets();
+    container.appendChild(global.app.canvas);
 
     await createLines();
+
+    const arrows = [
+        createArrowSprite(Direction.Left),
+        createArrowSprite(Direction.Down),
+        createArrowSprite(Direction.Up),
+        createArrowSprite(Direction.Right),
+    ]
+
+    arrows.forEach((arrow: Sprite) => {
+        arrow.y = 100;
+        global.app.stage.addChild(arrow);
+    })
+
     setupInfo();
 
     // Listen for animate update
-    app.ticker.add(loop);
+    global.app.ticker.add(loop);
 };
 
 async function createLines() {
     let graphics = new Graphics()
-    let margin = 50;
-    for (let i = 0; i < beatsVisible; i++) {
-        let height = margin + (app.screen.height - 2 * margin) / beatsVisible * i
+    for (let i = -1; i < beatsVisible; i++) {
+        let height = marginTop + (global.app.screen.height - marginTop) / beatsVisible * i
         graphics
             .moveTo(0, height)
-            .lineTo(app.screen.width, height)
+            .lineTo(global.app.screen.width, height)
             .stroke({ color: "white", pixelLine: true });
         for (let j = 1; j < numSubbeats; j++) {
-            let height = margin + (app.screen.height - 2 * margin) / beatsVisible * (i + j / numSubbeats)
+            let height = marginTop + (global.app.screen.height - marginTop) / beatsVisible * (i + j / numSubbeats)
+            let lightnessValue = 0.15
+            if (j % (numSubbeats / 4) == 0) lightnessValue = 0.3
+            if (j == numSubbeats / 2) lightnessValue = 0.5
+            let color = new Color([lightnessValue, lightnessValue, lightnessValue])
             graphics
                 .moveTo(0, height)
-                .lineTo(app.screen.width, height)
-                .stroke({ color: "gray", pixelLine: true });
+                .lineTo(global.app.screen.width, height)
+                .stroke({ color: color, pixelLine: true });
         }
     }
-    app.stage.addChild(graphics);
-}
-
-async function createArrow(arrowDirection: Direction): Promise<Sprite> {
-    let texture
-    switch (arrowDirection) {
-        case Direction.Up:
-            texture = await Assets.load('/arrow-up.png');
-            break;
-        case Direction.Right:
-            texture = await Assets.load('/arrow-right.png');
-            break;
-        case Direction.Down:
-            texture = await Assets.load('/arrow-down.png');
-            break;
-        case Direction.Left:
-            texture = await Assets.load('/arrow-left.png');
-            break;
-    }
-
-    let arrow = new Sprite(texture);
-    arrow.scale = 0.25
-    arrow.anchor.set(0.5);
-
-    return arrow
-}
-
-function getxPosition(arrowDirection: Direction): number {
-    return app.screen.width / 8 * (arrowDirection * 2 + 1);
-}
-
-interface Arrow {
-    sprite: Sprite,
-    direction: Direction
+    global.app.stage.addChild(graphics);
 }
 
 
-let queue: Arrow[] = []
-let bpm = 120
-let time = 0
-let beat = 0
-let subbeat = 0
-let timePassedSinceLastArrow = 0
-let timeBetweenArrows = 60 * 1000 / bpm
-// advance arrows every 1/16 of a beat
 async function loop(ticker: Ticker) {
     updateTime(ticker)
 
-    timePassedSinceLastArrow += ticker.deltaMS
+    // add arrows to queue
+    while (!noMoreNotes) {
+        let [noteBeat, noteSubbeat, noteDirection] = song.notes[index]
 
-    // add arrows
-    if (timePassedSinceLastArrow > timeBetweenArrows)
-    {
-        timePassedSinceLastArrow = timePassedSinceLastArrow - timeBetweenArrows
-        let randomDirection = Math.floor(Math.random() * 4)
-        let arrowSprite = await createArrow(randomDirection)
-        arrowSprite.x = getxPosition(randomDirection)
-        arrowSprite.y = app.screen.height
-        app.stage.addChild(arrowSprite)
-        queue.push({ sprite: arrowSprite, direction: randomDirection })
+        // if note is on field, add to queue
+        if (noteBeat * 100 + noteSubbeat < (beat + beatsVisible) * 100 + subbeat) {
+            let arrow = new Arrow({
+                beat: noteBeat,
+                subbeat: noteSubbeat,
+                direction: noteDirection,
+            })
+            arrowsQueue.push(arrow)
+            console.log(`added arrow: ${arrow.toString()}`)
+            index++
+            if (index == song.notes.length) {
+                noMoreNotes = true
+                console.log("No more notes to add.")
+            }
+        } else {
+            break
+        }
     }
 
-    // move arrows
-    queue.forEach((arrow: Arrow) => {
-        arrow.sprite.y -= 10 * ticker.deltaTime
-        if (arrow.sprite.y < -50) {
-            arrow.sprite.destroy()
-            queue.shift()
+    // remove arrows from queue
+    for (let i = 0; i < arrowsQueue.length; i++) {
+        let arrow = arrowsQueue[i]
+        if (arrow.beat * 100 + arrow.subbeat < (beat - 1) * 100 + subbeat) {
+            let removedArrow = arrowsQueue.shift()
+            removedArrow?.destruct()
+            console.log(`removed arrow: ${removedArrow?.toString()}`)
+            if (noMoreNotes && arrowsQueue.length == 0) {
+                songEnded = true
+                console.log("Song ended.")
+            }
+        } else {
+            break
         }
+    }
+
+    // update placement arrows
+    arrowsQueue.forEach(arrow => {
+        let distanceBetweenSubbeats = (global.app.screen.height - marginTop) / (beatsVisible * numSubbeats)
+        let lineNumber = (arrow.beat - beat) * numSubbeats + (arrow.subbeat - subbeat)
+        arrow.sprite.y = marginTop + lineNumber * distanceBetweenSubbeats
     })
 
     updateInfo(ticker);
@@ -133,7 +126,7 @@ function updateTime(ticker: Ticker) {
     time += ticker.deltaMS
     let timeInSeconds = time / 1000
     let timeInMinutes = timeInSeconds / 60
-    beat = Math.floor(timeInMinutes * bpm) - 5
+    beat = Math.floor(timeInMinutes * bpm)
     subbeat = Math.floor(((timeInMinutes * bpm) - beat) * numSubbeats)
 }
 
@@ -174,10 +167,10 @@ function setupInfo() {
     beatText.y = 70
     subbeatText.y = 100
 
-    app.stage.addChild(fpsText)
-    app.stage.addChild(timeText)
-    app.stage.addChild(beatText)
-    app.stage.addChild(subbeatText)
+    global.app.stage.addChild(fpsText)
+    global.app.stage.addChild(timeText)
+    global.app.stage.addChild(beatText)
+    global.app.stage.addChild(subbeatText)
 }
 
 let fpsArray: number[] = []
@@ -194,14 +187,24 @@ function updateFps(ticker: Ticker) {
 function updateInfo(ticker: Ticker) {
     updateFps(ticker)
     fpsText.text = Math.round(fps)
+    let timeString = ""
     let seconds = time / 1000
-    let mintes = Math.floor(seconds / 60)
-    let secondsLeft = Math.floor(seconds - mintes * 60)
-    let secondsLeftString = `${secondsLeft}`
-    if (secondsLeft < 10) {
-        secondsLeftString = "0" + secondsLeftString
+    if (Math.ceil(seconds) <= 0) {
+        seconds = Math.ceil(Math.abs(seconds))
+        if (seconds < 10) {
+            timeString = `-0:0${seconds}`
+        } else {
+            timeString = `-0:${seconds}`
+        }
+    } else {
+        let mintes = Math.floor(seconds / 60)
+        let secondsLeft = Math.floor(seconds - mintes * 60)
+        let secondsLeftString = `${secondsLeft}`
+        if (secondsLeft < 10) {
+            secondsLeftString = "0" + secondsLeftString
+        }
+        timeString = `${mintes}:${secondsLeftString}`
     }
-    let timeString = `${mintes}:${secondsLeftString}`
     timeText.text = timeString
     beatText.text = beat
     let subbeatString = `${subbeat}`
