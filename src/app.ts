@@ -12,13 +12,14 @@ let numSubbeats = 64;
 let marginTop = 100;
 let preBeats = 6;
 let bpm = 120
-let time = -1 * preBeats * 1000 * 60 / bpm
+let time = getStartTime()
 let beat = 0
 let subbeat = 0
 let index = 0
 let arrowsQueue: Arrow[] = []
 let noMoreNotes = false
 let songEnded = false
+let autoReset = true
 
 
 export async function setup(container: HTMLElement) {
@@ -106,6 +107,9 @@ async function loop(ticker: Ticker) {
             if (noMoreNotes && arrowsQueue.length == 0) {
                 songEnded = true
                 console.log("Song ended.")
+                if (autoReset) {
+                    reset()
+                }
             }
         } else {
             break
@@ -120,6 +124,24 @@ async function loop(ticker: Ticker) {
     })
 
     updateInfo(ticker);
+}
+
+function getStartTime() {
+    return -1 * preBeats * 1000 * 60 / bpm
+}
+
+function reset() {
+    console.log("Resetting.")
+    beat = 0
+    subbeat = 0
+    time = getStartTime()
+    noMoreNotes = false
+    songEnded = false
+    arrowsQueue.forEach(arrow => {
+        arrow.destruct()
+    })
+    arrowsQueue = []
+    index = 0
 }
 
 function updateTime(ticker: Ticker) {
