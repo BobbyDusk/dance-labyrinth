@@ -31,6 +31,8 @@ let timeOffsetOk = 200
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
 // animation for missing notes
 // animation for pressing without a note
+// different colors for the 4 columns
+// top arrows should be hollow
 
 export async function setup(container: HTMLElement) {
     await global.app.init({ width: 600, height: 1000 });
