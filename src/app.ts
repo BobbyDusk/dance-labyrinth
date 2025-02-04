@@ -12,15 +12,19 @@ let beatsVisible = 5;
 let numSubbeats = 64;
 let marginTop = 100;
 let preBeats = 6;
-let bpm = 120
-let startTime = getStartTime()
+let bpm = 60
+let startTime = 0;
+setStartTime();
 let beat = 0
 let subbeat = 0
-let index = 0
+let noteIndex = 0
 let arrowsQueue: Arrow[] = []
 let noMoreNotes = false
 let songEnded = false
 let autoReset = true
+let timeOffsetPerfect = 100
+let timeOffsetGood = 200
+let timeOffsetOk = 300
 
 
 export async function setup(container: HTMLElement) {
@@ -74,11 +78,11 @@ async function createLines() {
 
 
 async function loop(ticker: Ticker) {
-    updateTime(ticker)
+    updateTime()
 
     // add arrows to queue
     while (!noMoreNotes) {
-        let [noteBeat, noteSubbeat, noteDirection] = song.notes[index]
+        let [noteBeat, noteSubbeat, noteDirection] = song.notes[noteIndex]
 
         // if note is on field, add to queue
         if (noteBeat * 100 + noteSubbeat < (beat + beatsVisible) * 100 + subbeat) {
@@ -89,8 +93,8 @@ async function loop(ticker: Ticker) {
             })
             arrowsQueue.push(arrow)
             console.log(`added arrow: ${arrow.toString()}`)
-            index++
-            if (index == song.notes.length) {
+            noteIndex++
+            if (noteIndex == song.notes.length) {
                 noMoreNotes = true
                 console.log("No more notes to add.")
             }
@@ -106,17 +110,20 @@ async function loop(ticker: Ticker) {
             let removedArrow = arrowsQueue.shift()
             removedArrow?.destruct()
             console.log(`removed arrow: ${removedArrow?.toString()}`)
-            if (noMoreNotes && arrowsQueue.length == 0) {
-                songEnded = true
-                console.log("Song ended.")
-                if (autoReset) {
-                    reset()
-                }
-            }
         } else {
             break
         }
     }
+
+    // check if song ended
+    if (noMoreNotes && arrowsQueue.length == 0) {
+        songEnded = true
+        console.log("Song ended.")
+        if (autoReset) {
+            reset()
+        }
+    }
+
 
     // update placement arrows
     arrowsQueue.forEach(arrow => {
@@ -130,44 +137,74 @@ async function loop(ticker: Ticker) {
 
 export function press(direction: Direction) {
     let pressTime = Date.now() - startTime
-    let pressBeat = Math.floor(pressTime / (60000 / bpm))
-    let pressSubbeat = Math.floor((pressTime % (60000 / bpm)) / (60000 / bpm / numSubbeats))
-    console.log(pressBeat, pressSubbeat, direction)
-    //let arrow = arrowsQueue.find(arrow => arrow.beat == pressBeat && arrow.subbeat == pressSubbeat && arrow.direction == direction)
-    //if (arrow) {
-    //    arrow.destruct()
-    //    arrowsQueue.splice(arrowsQueue.indexOf(arrow), 1)
-    //    console.log(`pressed arrow: ${arrow.toString()}`)
-    //}
+    let smallestTimeDifference = Infinity
+    let indexArrow = -1
+    for (let i = 0; i < arrowsQueue.length; i++) {
+        let arrow = arrowsQueue[i]
+        if( arrow.direction == direction) {
+            let timeArrow = beatToTime(arrow.beat, arrow.subbeat)
+            let timeDifference = Math.abs(pressTime - timeArrow)
+            if (timeDifference < smallestTimeDifference) {
+                smallestTimeDifference = timeDifference
+                indexArrow = i
+            } else if (indexArrow != -1) {
+                // since the arrows are sorted by time, we can break here
+                break
+            }
+        }
+    }
+    if (indexArrow != -1 && smallestTimeDifference < timeOffsetOk) {
+        let arrow = arrowsQueue[indexArrow]
+        arrow.destruct()
+        arrowsQueue.splice(indexArrow, 1)
+        console.log(`Hit ${arrow.toString()}`)
+    }
 }
 
-function getStartTime() {
-    return Date.now() + preBeats * 1000 * 60 / bpm
-}
+
 
 function reset() {
     console.log("Resetting.")
     beat = 0
     subbeat = 0
-    startTime = getStartTime()
+    setStartTime()
     noMoreNotes = false
     songEnded = false
     arrowsQueue.forEach(arrow => {
         arrow.destruct()
     })
     arrowsQueue = []
-    index = 0
+    noteIndex = 0
+}
+
+function setStartTime() {
+    startTime = Date.now() + preBeats * 1000 * 60 / bpm
 }
 
 function getTimeSinceStart(): number {
     return Date.now() - startTime
 }
 
-function updateTime(ticker: Ticker) {
-    let timeInSeconds = getTimeSinceStart() / 1000
+function timeToBeat(time: number): { beat: number, subbeat: number } {
+    let timeInSeconds = time / 1000
     let timeInMinutes = timeInSeconds / 60
     beat = Math.floor(timeInMinutes * bpm)
     subbeat = Math.floor(((timeInMinutes * bpm) - beat) * numSubbeats)
+    return { beat, subbeat }
+}
+
+function beatToTime(beat: number, subbeat: number): number {
+    let timeInMinutes = beat / bpm + subbeat / (bpm * numSubbeats)
+    let timeInSeconds = timeInMinutes * 60
+    let time = timeInSeconds * 1000
+    return time
+}
+
+function updateTime() {
+    let time = getTimeSinceStart()
+    let computedBeat = timeToBeat(time)
+    beat = computedBeat.beat
+    subbeat = computedBeat.subbeat
 }
 
 let fpsText: BitmapText;
