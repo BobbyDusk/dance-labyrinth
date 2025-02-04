@@ -22,10 +22,15 @@ let arrowsQueue: Arrow[] = []
 let noMoreNotes = false
 let songEnded = false
 let autoReset = true
-let timeOffsetPerfect = 100
-let timeOffsetGood = 200
-let timeOffsetOk = 300
+let timeOffsetPerfect = 20
+let timeOffsetGreat = 50
+let timeOffsetGood = 100
+let timeOffsetOk = 200
 
+// sudden death mode -> miss single note => restart
+// animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
+// animation for missing notes
+// animation for pressing without a note
 
 export async function setup(container: HTMLElement) {
     await global.app.init({ width: 600, height: 1000 });
@@ -51,6 +56,8 @@ export async function setup(container: HTMLElement) {
     // Listen for animate update
     global.app.ticker.add(loop);
     setupInput();
+
+    showPressFeedback("perfect")
 };
 
 async function createLines() {
@@ -289,4 +296,24 @@ function updateInfo(ticker: Ticker) {
         subbeatString = "0" + subbeat
     }
     subbeatText.text = subbeatString
+}
+
+function lightUpColumn(direction: Direction) {
+}
+
+function showPressFeedback(status: "perfect" | "great" | "good" | "ok") {
+    let text = new BitmapText({
+        text: status,
+        style: {
+            fontSize: 100,
+            fill: "white",
+        }
+    })
+    global.app.stage.addChild(text)
+    text.x = global.app.screen.width / 2
+    text.y = 8 * global.app.screen.height / 10
+    text.anchor.set(0.5);
+    setTimeout(() => {
+        global.app.stage.removeChild(text)
+    }, 1000)
 }

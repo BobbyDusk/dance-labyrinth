@@ -14,11 +14,3 @@ export function setupInput() {
     }
   })
 }
-
-//function press(direction: Direction) {
-// when pressing a key, check the difference between Date.now() and startTime
-// use this difference to calculate the beat and subbeat
-// Compare this to the beat and subbeat of the arrows in the queue
-// make sure never to use the render loop. Input + verficiation should be
-// completely seperate from render loop
-//}
