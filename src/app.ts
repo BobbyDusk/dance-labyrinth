@@ -66,8 +66,7 @@ export async function setup(container: HTMLElement) {
     // Listen for animate update
     global.app.ticker.add(loop);
     setupInput();
-
-    showPressFeedback("perfect")
+    lightUpColumn(Direction.Left);
 };
 
 async function createLines() {
@@ -318,17 +317,37 @@ function updateInfo(ticker: Ticker) {
 }
 
 function lightUpColumn(direction: Direction) {
+    let w = global.app.screen.width / 4
+    let h = global.app.screen.height
+    let graphics: Graphics = new Graphics()
+    graphics.rect(direction * w, 0, w, h).fill({color: 'white', alpha: 0.25})
+    global.app.stage.addChild(graphics)
 }
 
 let pressFeedbackText: BitmapText | null = null
 let lastTimeoutId: number | null = null
 function showPressFeedback(quality: PressQuality) {
     global.app.stage.removeChild(pressFeedbackText!)
+    let color;
+    switch (quality) {
+        case PressQuality.Perfect:
+            color = "#28FA34"
+            break;
+        case PressQuality.Great:
+            color = "#80FA3E"
+            break;
+        case PressQuality.Good:
+            color = "#CEFA3F"
+            break;
+        default:
+            color = "#FAF03E"
+            break;
+    }
     let text = new BitmapText({
         text: quality,
         style: {
             fontSize: 100,
-            fill: "white",
+            fill: color,
         }
     })
     global.app.stage.addChild(text)
