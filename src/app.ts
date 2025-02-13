@@ -27,6 +27,14 @@ let timeOffsetGreat = 50
 let timeOffsetGood = 100
 let timeOffsetOk = 200
 
+enum PressQuality {
+    Perfect = "Perfect",
+    Great = "Great",
+    Good = "Good",
+    Ok = "Ok",
+    Miss = "Miss",
+}
+
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
 // animation for missing notes
@@ -166,6 +174,15 @@ export function press(direction: Direction) {
         let arrow = arrowsQueue[indexArrow]
         arrow.destruct()
         arrowsQueue.splice(indexArrow, 1)
+        if (smallestTimeDifference < timeOffsetPerfect) {
+            showPressFeedback(PressQuality.Perfect)
+        } else if (smallestTimeDifference < timeOffsetGreat) {
+            showPressFeedback(PressQuality.Great)
+        } else if (smallestTimeDifference < timeOffsetGood) {
+            showPressFeedback(PressQuality.Good)
+        } else {
+            showPressFeedback(PressQuality.Ok)
+        }
         console.log(`Hit ${arrow.toString()}`)
     }
 }
@@ -303,9 +320,12 @@ function updateInfo(ticker: Ticker) {
 function lightUpColumn(direction: Direction) {
 }
 
-function showPressFeedback(status: "perfect" | "great" | "good" | "ok") {
+let pressFeedbackText: BitmapText | null = null
+let lastTimeoutId: number | null = null
+function showPressFeedback(quality: PressQuality) {
+    global.app.stage.removeChild(pressFeedbackText!)
     let text = new BitmapText({
-        text: status,
+        text: quality,
         style: {
             fontSize: 100,
             fill: "white",
@@ -315,7 +335,10 @@ function showPressFeedback(status: "perfect" | "great" | "good" | "ok") {
     text.x = global.app.screen.width / 2
     text.y = 8 * global.app.screen.height / 10
     text.anchor.set(0.5);
-    setTimeout(() => {
+    pressFeedbackText = text
+    clearTimeout(lastTimeoutId!)
+    lastTimeoutId = setTimeout(() => {
         global.app.stage.removeChild(text)
+        pressFeedbackText = null
     }, 1000)
 }
