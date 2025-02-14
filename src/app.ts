@@ -66,7 +66,7 @@ export async function setup(container: HTMLElement) {
     // Listen for animate update
     global.app.ticker.add(loop);
     setupInput();
-    lightUpColumn(Direction.Left);
+    setupLightUpColumns();
 };
 
 async function createLines() {
@@ -152,6 +152,8 @@ async function loop(ticker: Ticker) {
 }
 
 export function press(direction: Direction) {
+    lightUpColumn(direction)
+
     let pressTime = Date.now() - startTime
     let smallestTimeDifference = Infinity
     let indexArrow = -1
@@ -316,12 +318,30 @@ function updateInfo(ticker: Ticker) {
     subbeatText.text = subbeatString
 }
 
+let lightUpColumns: Graphics[] = []
+let lightUpColumnsAlphas = [0, 0, 0, 0]
+let maxAlpha = 0.5
+let fadeDuration = 500
+let fadeInterval = 10
+function setupLightUpColumns() { 
+    for (let i = 0; i < 4; i++) {
+        let graphics: Graphics = new Graphics()
+        lightUpColumns.push(graphics)
+        global.app.stage.addChild(graphics)
+        let width = global.app.screen.width / 4
+        let height = global.app.screen.height
+        setInterval(() => {
+            lightUpColumnsAlphas[i] = Math.max(0, lightUpColumnsAlphas[i] - (maxAlpha / (fadeDuration / fadeInterval)))
+            lightUpColumns[i].clear()
+            lightUpColumns[i].rect(i * width, 0, width, height).fill({color: 'white', alpha: lightUpColumnsAlphas[i]})
+        }, 10)
+    }
+
+}
+
 function lightUpColumn(direction: Direction) {
-    let w = global.app.screen.width / 4
-    let h = global.app.screen.height
-    let graphics: Graphics = new Graphics()
-    graphics.rect(direction * w, 0, w, h).fill({color: 'white', alpha: 0.25})
-    global.app.stage.addChild(graphics)
+    lightUpColumnsAlphas[direction] = maxAlpha
+    console.log(lightUpColumnsAlphas)
 }
 
 let pressFeedbackText: BitmapText | null = null
