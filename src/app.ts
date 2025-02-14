@@ -7,7 +7,6 @@ import { Arrow } from './Arrow';
 import { setupInput } from "./input"
 
 
-
 let beatsVisible = 5;
 let numSubbeats = 64;
 let marginTop = 100;
@@ -34,6 +33,13 @@ enum PressQuality {
     Ok = "Ok",
     Miss = "Miss",
 }
+
+const COLORS = [
+    "#FAD54B",
+    "#4AF97E",
+    "#4B58FA",
+    "#FA4D4B",
+]
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
@@ -320,7 +326,7 @@ function updateInfo(ticker: Ticker) {
 
 let lightUpColumns: Graphics[] = []
 let lightUpColumnsAlphas = [0, 0, 0, 0]
-let maxAlpha = 0.5
+let maxAlpha = 0.75
 let fadeDuration = 500
 let fadeInterval = 10
 function setupLightUpColumns() { 
@@ -333,7 +339,7 @@ function setupLightUpColumns() {
         setInterval(() => {
             lightUpColumnsAlphas[i] = Math.max(0, lightUpColumnsAlphas[i] - (maxAlpha / (fadeDuration / fadeInterval)))
             lightUpColumns[i].clear()
-            lightUpColumns[i].rect(i * width, 0, width, height).fill({color: 'white', alpha: lightUpColumnsAlphas[i]})
+            lightUpColumns[i].rect(i * width, 0, width, height).fill({color: COLORS[i], alpha: lightUpColumnsAlphas[i]})
         }, 10)
     }
 
