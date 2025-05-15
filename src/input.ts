@@ -1,5 +1,5 @@
 import { Direction } from "./Arrow"
-import { press } from "./app"
+import { press } from "./musicApp"
 
 export function setupInput() {
   document.addEventListener("keydown", (event: KeyboardEvent) => {

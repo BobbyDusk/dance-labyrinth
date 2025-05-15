@@ -1,14 +1,18 @@
 <script lang="ts">
- import { setup } from "./app"
+ import { setup as setupMusicApp } from "./musicApp"
+ import { setup as setupLabyrinthApp } from "./labyrinthApp"
  import { onMount } from "svelte"
 
- let container: HTMLElement | undefined = $state()
+ let musicContainer: HTMLElement | undefined = $state()
+ let labyrinthContainer: HTMLElement | undefined = $state()
 
   onMount(() => {
-    setup(container!)
+    setupMusicApp(musicContainer!)
+    setupLabyrinthApp(labyrinthContainer!)
   })
 </script>
 
 <main class="flex h-screen justify-center items-center">
-  <div bind:this={container}></div>
+  <div bind:this={labyrinthContainer}></div>
+  <!--<div bind:this={musicContainer}></div>-->
 </main>

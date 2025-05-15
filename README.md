@@ -7,7 +7,7 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
 ## Game
 
 - Speed is defined by BPM.
-- The smallest precision is 1/16 of a beat.
+- The smallest precision is 1/64 of a beat.
 
 ## JSON song file
 
@@ -19,3 +19,5 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
 - No queue. Just have an index of the first relevant arrow. Then, go through the arrows until you've reached an arrow that is not yet relevant
 - Have a polling system that is independant of the rendering loop. Then graphics might render at 60 pfs, but the inputs are actually checked at 120 or 240 fps.
 - Open source fps display.
+- maybe combine with bomberman gameplay?
+- add (skeletal) animated figure in middle of screen that dances when doing well
