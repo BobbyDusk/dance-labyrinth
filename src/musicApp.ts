@@ -5,13 +5,15 @@ import { createArrowSprite, Direction } from './Arrow';
 import preloadAssets from "./assets";
 import { Arrow } from './Arrow';
 import { setupInput } from "./input"
+import { Howl } from 'howler';
+import { moveActiveSquare } from './labyrinthApp';
 
 
 let beatsVisible = 5;
 let numSubbeats = 64;
 let marginTop = 100;
 let preBeats = 6;
-let bpm = 60
+let bpm = 120
 let startTime = 0;
 setStartTime();
 let beat = 0
@@ -220,9 +222,9 @@ function getTimeSinceStart(): number {
 function timeToBeat(time: number): { beat: number, subbeat: number } {
     let timeInSeconds = time / 1000
     let timeInMinutes = timeInSeconds / 60
-    beat = Math.floor(timeInMinutes * bpm)
-    subbeat = Math.floor(((timeInMinutes * bpm) - beat) * numSubbeats)
-    return { beat, subbeat }
+    let localBeat = Math.floor(timeInMinutes * bpm)
+    let localSubbeat = Math.floor(((timeInMinutes * bpm) - localBeat) * numSubbeats)
+    return { beat: localBeat, subbeat: localSubbeat }
 }
 
 function beatToTime(beat: number, subbeat: number): number {
@@ -235,8 +237,18 @@ function beatToTime(beat: number, subbeat: number): number {
 function updateTime() {
     let time = getTimeSinceStart()
     let computedBeat = timeToBeat(time)
+    if (beat < computedBeat.beat) {
+        console.log("Beat changed")
+        playBeat()
+        moveActiveSquare()
+    }
     beat = computedBeat.beat
     subbeat = computedBeat.subbeat
+}
+
+function playBeat() {
+    const kickSound = new Howl({ src: ['/base_kick.wav'] });
+    kickSound.play();
 }
 
 let fpsText: BitmapText;

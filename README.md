@@ -30,7 +30,10 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
     - jikl
     - arrow keys
 
-- set character facing active direction
-- move on every beat to active direction
 - combine labyrinth and music such that only move if all arrows between last beat and current beat were performed well
 - figure out how to give extra reward for perfect or great notes
+- change the name to *dance 2 move*
+- Impelement the following game modes:
+  - single player labyrinth
+  - multiplayer labyrinth race
+  - multiplayer bomberman 

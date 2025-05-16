@@ -1,6 +1,6 @@
 import { Direction } from "./Arrow"
 import { press } from "./musicApp"
-import { MoveDirection, setActiveDirection } from "./labyrinthApp"
+import { MoveDirection, setActiveDirection, activeDirection } from "./labyrinthApp"
 
 export function setupInput() {
   document.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -23,5 +23,20 @@ export function setupInput() {
     }
   })
 
+  document.addEventListener("keyup", (event: KeyboardEvent) => {
+    if (event.key === "a" || event.key === "s" || event.key === "w" || event.key === "d") {
+      const keyDirectionMap: { [key: string]: MoveDirection } = {
+        a: MoveDirection.Left,
+        s: MoveDirection.Down,
+        w: MoveDirection.Up,
+        d: MoveDirection.Right,
+      };
+
+      const isActiveKey = keyDirectionMap[event.key] === activeDirection;
+      if (isActiveKey) {
+        setActiveDirection(MoveDirection.None);
+      }
+    }
+  })
 
 }

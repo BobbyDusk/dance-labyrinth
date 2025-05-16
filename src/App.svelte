@@ -8,13 +8,13 @@
   let labyrinthContainer: HTMLElement | undefined = $state();
 
   onMount(() => {
-    // setupMusicApp(musicContainer!)
+    setupMusicApp(musicContainer!)
     setupLabyrinthApp(labyrinthContainer!);
     setupInput();
   });
 </script>
 
-<main class="flex h-screen justify-center items-center">
-  <div bind:this={labyrinthContainer}></div>
-  <!--<div bind:this={musicContainer}></div>-->
+<main class="flex h-screen justify-center items-center gap-2">
+  <div class="self-start" bind:this={labyrinthContainer}></div>
+  <div class="self-bottom" bind:this={musicContainer}></div>
 </main>

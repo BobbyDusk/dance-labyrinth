@@ -1,6 +1,7 @@
 import { Application, Graphics, Sprite } from "pixi.js"
 import { Viewport } from "pixi-viewport"
 import Square from "./Square"
+import { draw } from "svelte/transition"
 
 let numberOfSquaresSide = 19
 let sideSize = 800
@@ -18,7 +19,7 @@ export enum MoveDirection {
     None = "none"
 }
 
-let activeDirection: MoveDirection = MoveDirection.None
+export let activeDirection: MoveDirection = MoveDirection.None
 
 function getRandomBool() {
     return Math.random() < 0.5
@@ -80,13 +81,9 @@ export async function setup(container: HTMLElement) {
     setActiveSquare(10, 10)
 }
 
-function setActiveSquare(x: number, y: number) {
+function drawCharacter() {
     characterGraphics.clear()
-    activeSquare = field[x][y]
-    viewport.moveCenter(
-        (activeSquare!.x + 0.5) * squareSize,
-        (activeSquare!.y + 0.5) * squareSize
-    )
+    if (!activeSquare) return
     let characterSizePercent = 0.5
     let characterSize = squareSize * characterSizePercent
     characterGraphics.rect(
@@ -97,13 +94,62 @@ function setActiveSquare(x: number, y: number) {
     )
     characterGraphics.fill(0x00FF00)
     characterGraphics.stroke({ width: 0 })
-    viewport.addChild(characterGraphics)
+
+    const eyeOffset = characterSize * 0.18
+    const eyeRadius = characterSize * 0.09
+    let dx = 0, dy = 0
+
+    switch (activeDirection) {
+        case MoveDirection.Up:
+            dy = -eyeOffset
+            break
+        case MoveDirection.Down:
+            dy = eyeOffset
+            break
+        case MoveDirection.Left:
+            dx = -eyeOffset
+            break
+        case MoveDirection.Right:
+            dx = eyeOffset
+            break
+        case MoveDirection.None:
+            dx = 0
+            dy = 0
+            break
+    }
+
+    // Left eye
+    characterGraphics.circle(
+        (activeSquare.x + 0.5) * squareSize - eyeRadius + dx,
+        (activeSquare.y + 0.5) * squareSize - eyeRadius + dy,
+        eyeRadius
+    )
+    characterGraphics.fill(0x000000)
+
+    // Right eye
+    characterGraphics.circle(
+        (activeSquare.x + 0.5) * squareSize + eyeRadius + dx,
+        (activeSquare.y + 0.5) * squareSize - eyeRadius + dy,
+        eyeRadius
+    )
+    characterGraphics.fill(0x000000)
+
 }
 
-export function moveActiveSquare(direction: MoveDirection) {
+function setActiveSquare(x: number, y: number) {
+    characterGraphics.clear()
+    activeSquare = field[x][y]
+    viewport.moveCenter(
+        (activeSquare!.x + 0.5) * squareSize,
+        (activeSquare!.y + 0.5) * squareSize
+    )
+    drawCharacter()
+}
+
+export function moveActiveSquare() {
     let x = activeSquare!.x
     let y = activeSquare!.y
-    switch (direction) {
+    switch (activeDirection) {
         case MoveDirection.Up:
             if (activeSquare!.isTopWall) {
                 return
@@ -134,6 +180,7 @@ export function moveActiveSquare(direction: MoveDirection) {
 
 export function setActiveDirection(direction: MoveDirection) {
     activeDirection = direction
+    drawCharacter()
 }
 
 
