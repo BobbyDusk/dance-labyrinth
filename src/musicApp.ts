@@ -71,7 +71,6 @@ export async function setup(container: HTMLElement) {
 
     // Listen for animate update
     global.app.ticker.add(loop);
-    setupInput();
     setupLightUpColumns();
 };
 

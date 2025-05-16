@@ -21,3 +21,16 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
 - Open source fps display.
 - maybe combine with bomberman gameplay?
 - add (skeletal) animated figure in middle of screen that dances when doing well
+- controls configuration for both hands independendly.
+  - options for left hand:
+    - awsd
+    - asdf
+  - options for right hand:
+    - jkl;
+    - jikl
+    - arrow keys
+
+- set character facing active direction
+- move on every beat to active direction
+- combine labyrinth and music such that only move if all arrows between last beat and current beat were performed well
+- figure out how to give extra reward for perfect or great notes
