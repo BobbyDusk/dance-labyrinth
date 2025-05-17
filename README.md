@@ -29,6 +29,9 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
     - jkl;
     - jikl
     - arrow keys
+- make tool for creating charts
+- make an free an open-source repo that can connect to the game where people can upload their songs + charts. Have no ownership over the songs + tracks
+- use AI to create new charts once the database is big enough
 
 - combine labyrinth and music such that only move if all arrows between last beat and current beat were performed well
 - figure out how to give extra reward for perfect or great notes
