@@ -1,0 +1,38 @@
+x-common-vars: &common-vars
+  ENVIRONMENT: production
+  TZ: Europe/Brussels
+
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    environment: *common-vars
+    ports:
+      - 443:443
+      - 80:80
+    restart: unless-stopped
+    networks:
+      - nginx
+    volumes:
+      - ./static:/static:rw
+    depends_on:
+      - api
+
+  api:
+    container_name: api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment: *common-vars
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    networks:
+      - nginx
+    volumes:
+      - ./static:/static:rw
+
+networks:
+  nginx:
