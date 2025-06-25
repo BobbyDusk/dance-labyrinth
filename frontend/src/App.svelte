@@ -1,23 +1,23 @@
 <script lang="ts">
-  import { setup as setupMusicApp } from "./musicApp";
-  import { setup as setupLabyrinthApp } from "./labyrinthApp";
   import { onMount } from "svelte";
-  import { setupInput } from "./input";
+  import setupInput from "./Dance/inputSetup";
   import ChartEditor from "./ChartEditor.svelte";
+  import { DanceManager } from "./Dance/danceManager";
+  import preloadAssets from "./assets";
 
   let musicContainer: HTMLElement | undefined = $state();
   let labyrinthContainer: HTMLElement | undefined = $state();
   let isEditorOpen = $state(false);
 
-  onMount(() => {
-    setupMusicApp(musicContainer!);
-    setupLabyrinthApp(labyrinthContainer!);
+  onMount(async () => {
+    await preloadAssets();
     setupInput();
+    await DanceManager.setup(musicContainer!);
   });
 </script>
 
 <main class="flex h-screen justify-center items-center gap-2">
-  <div class="self-start" bind:this={labyrinthContainer}></div>
+  <div class="self-start hidden" bind:this={labyrinthContainer}></div>
   <div class="self-bottom" bind:this={musicContainer}></div>
   <button
     class="absolute top-0 right-0 m-4 bg-blue-500 text-white px-4 py-2 rounded"

@@ -4,7 +4,7 @@ import numpy as np
 import tempfile
 import os
 from PIL import Image
-from src.mode import is_dev_mode    
+from src.mode import is_dev_mode, get_url
 
 if is_dev_mode():
     static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static"))
@@ -45,7 +45,7 @@ def create_spectrogram(audio_path):
 
     # Save as PNG using PIL
     create_static_dir()
-    tmp_file = tempfile.NamedTemporaryFile(suffix=".png", dir=STATIC_DIR, delete=False)
+    tmp_file = tempfile.NamedTemporaryFile(suffix=".png", dir=static_dir, delete=False)
     im = Image.fromarray(img)
     im = im.transpose(Image.ROTATE_270)  # Rotate 90 degrees clockwise
     im.save(tmp_file.name)
@@ -104,4 +104,4 @@ def create_waveform(audio_path):
     tmp_file = tempfile.NamedTemporaryFile(suffix=".png", dir=static_dir, delete=False)
     im.save(tmp_file.name)
     os.chmod(tmp_file.name, 0o777)
-    return tmp_file.name
+    return os.path.join(get_url(), "static", os.path.basename(tmp_file.name))

@@ -1,34 +1,27 @@
 import { Assets, Sprite, Texture } from "pixi.js";
-import { global } from "./global"
+import { global } from "../global"
+import { Direction } from "./Direction";
 
 
-export enum Direction
-{
-    Left = 0,
-    Down = 1,
-    Up = 2,
-    Right = 3
-}
-
-export function createArrowSprite(arrowDirection: Direction): Sprite {
+export function createArrowSprite(arrowDirection: Direction, hollow = false): Sprite {
     let texture
     switch (arrowDirection) {
         case Direction.Up:
-            texture = Assets.get('arrowUp');
+            texture = hollow ? Assets.get('arrowUpHollow') : Assets.get('arrowUp');
             break;
         case Direction.Right:
-            texture = Assets.get('arrowRight');
+            texture = hollow ? Assets.get('arrowRightHollow') : Assets.get('arrowRight');
             break;
         case Direction.Down:
-            texture = Assets.get('arrowDown');
+            texture = hollow ? Assets.get('arrowDownHollow') : Assets.get('arrowDown');
             break;
         case Direction.Left:
-            texture = Assets.get('arrowLeft');
+            texture = hollow ? Assets.get('arrowLeftHollow') : Assets.get('arrowLeft');
             break;
     }
 
     let arrow = new Sprite(texture);
-    arrow.scale = 0.15
+    arrow.scale = 0.2;
     arrow.anchor.set(0.5);
     arrow.x = getxPosition(arrowDirection)
 

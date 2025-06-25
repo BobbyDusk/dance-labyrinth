@@ -1,42 +1,81 @@
-import { Direction } from "./Arrow"
-import { press } from "./musicApp"
-import { MoveDirection, setActiveDirection, activeDirection } from "./labyrinthApp"
+import logger from "./logger";
+import { StaticObservable, Observable } from "./genericClasses";
 
-export function setupInput() {
-  document.addEventListener("keydown", (event: KeyboardEvent) => {
-    if (event.key === "j") {
-      press(Direction.Left)
-    } else if (event.key === "k") {
-      press(Direction.Down)
-    } else if (event.key === "l") {
-      press(Direction.Up)
-    } else if (event.key === ";") {
-      press(Direction.Right)
-    } else if (event.key === "a") {
-      setActiveDirection(MoveDirection.Left)
-    } else if (event.key === "s") {
-      setActiveDirection(MoveDirection.Down)
-    } else if (event.key === "w") {
-      setActiveDirection(MoveDirection.Up)
-    } else if (event.key === "d") {
-      setActiveDirection(MoveDirection.Right)
+export enum InputType {
+  KEYPRESS = "KeyPress",
+}
+
+export enum KeyPressType {
+  DOWN = "down",
+  UP = "up",
+}
+
+export interface KeyPressConfig {
+  key: string;
+  type?: KeyPressType;
+}
+
+export interface ButtonConfig {
+  label: string;
+}
+
+export class InputManager {
+  private static instance: InputManager = new InputManager();
+  private inputActions: { [name: string]: InputAction } = {};
+
+  private constructor() {
+  }
+
+  static addInputAction(name: string) {
+    if (InputManager.instance.inputActions[name]) {
+      logger.warn(`Input action with name ${name} already exists.`);
+      return;
     }
-  })
+    InputManager.instance.inputActions[name] = new InputAction();
+  }
 
-  document.addEventListener("keyup", (event: KeyboardEvent) => {
-    if (event.key === "a" || event.key === "s" || event.key === "w" || event.key === "d") {
-      const keyDirectionMap: { [key: string]: MoveDirection } = {
-        a: MoveDirection.Left,
-        s: MoveDirection.Down,
-        w: MoveDirection.Up,
-        d: MoveDirection.Right,
-      };
+  static addInput(InputAction: string, type: InputType, config: KeyPressConfig | ButtonConfig) {
+    let input: Input;
+    switch (type) {
+      case InputType.KEYPRESS:
+        input = new KeyPress((config as KeyPressConfig).key);
+        break;
+      default:
+        console.error(`Input type ${type} is not supported.`);
+        return;
+    }
+    InputManager.instance.inputActions[InputAction].addInput(input)
+  }
 
-      const isActiveKey = keyDirectionMap[event.key] === activeDirection;
-      if (isActiveKey) {
-        setActiveDirection(MoveDirection.None);
+  static addAction(InputAction: string, action: () => void) {
+    InputManager.instance.inputActions[InputAction].subscribe(action);
+  }
+}
+
+class InputAction extends Observable {
+  protected inputs: Input[] = [];
+
+  addInput(input: Input) {
+    input.subscribe(this.notify.bind(this));
+    this.inputs.push(input);
+  }
+
+  removeInput(input: Input) {
+    this.inputs = this.inputs.filter(i => i !== input);
+  }
+}
+
+class Input extends Observable {
+}
+
+class KeyPress extends Input {
+  constructor(public key: string, public type: KeyPressType = KeyPressType.DOWN) {
+    super();
+    document.addEventListener(type == KeyPressType.DOWN ? "keydown" : "keyup", (event: KeyboardEvent) => {
+      if (event.key === key) {
+        logger.debug(`KeyPress event: ${event.key}, type: ${type}`);
+        this.notify();
       }
-    }
-  })
-
+    })
+  }
 }

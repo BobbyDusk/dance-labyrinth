@@ -1,6 +1,7 @@
 x-common-vars: &common-vars
   ENVIRONMENT: production
   TZ: Europe/Brussels
+  MODE: dev
 
 services:
   nginx:

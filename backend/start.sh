@@ -1,1 +1,1 @@
-uv run ./api/main.py
+uv run app/main.py --config-file app/pyproject.toml --directory app
