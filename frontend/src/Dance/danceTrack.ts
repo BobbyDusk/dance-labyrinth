@@ -2,6 +2,7 @@ import { Application, Graphics, Sprite, Color, Container } from 'pixi.js';
 import { Arrow } from './Arrow';
 import logger from '../logger';
 import { Beat } from '../beat';
+import type { BeatUpdate } from '../beat';
 import { Direction } from './Direction';
 
 // sudden death mode -> miss single note => restart
@@ -22,7 +23,6 @@ const COLORS = [
 
 export class DanceTrack {
     private static instance: DanceTrack = new DanceTrack();
-    private static arrows: Arrow[] = [];
 
     static BEATS_VISIBLE = 5;
     static MARGIN_TOP = 100;
@@ -31,6 +31,7 @@ export class DanceTrack {
     static FADE_INTERVAL = 10;
 
     static app: Application = new Application()
+    static arrows: Arrow[] = [];
     static lightUpColumns: Graphics[] = []
     static lightUpColumnsAlphas: number[] = [0, 0, 0, 0]
 
@@ -58,6 +59,7 @@ export class DanceTrack {
         backgroundContainer.label = "background";
         DanceTrack.app.stage.addChild(backgroundContainer);
         let foregroundContainer = new Container();
+        foregroundContainer.y = DanceTrack.MARGIN_TOP;
         foregroundContainer.label = "foreground";
         DanceTrack.app.stage.addChild(foregroundContainer);
         let arrowsContainer = new Container();
@@ -131,7 +133,7 @@ export class DanceTrack {
             arrowsContainer.addChild(arrow.sprite);
             let distanceBetweenSubbeats = (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / (DanceTrack.BEATS_VISIBLE * Beat.NUM_SUBBEATS);
             let lineNumber = arrow.beat * Beat.NUM_SUBBEATS + arrow.subbeat;
-            arrow.sprite.y = DanceTrack.MARGIN_TOP + lineNumber * distanceBetweenSubbeats;
+            arrow.sprite.y = lineNumber * distanceBetweenSubbeats;
             arrow.sprite.x = DanceTrack.getXForDirection(arrow.direction);
         });
         DanceTrack.app.render();
@@ -142,7 +144,7 @@ export class DanceTrack {
         return DanceTrack.app.screen.width / 8 * (direction * 2 + 1);
     }
 
-    static update({ beat, subbeat }: { beat: number, subbeat: number }) {
+    static update({ beat, subbeat }: BeatUpdate) {
         let foregroundContainer = DanceTrack.app.stage.getChildByLabel("foreground")!;
         let distanceBetweenSubbeats = (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / (DanceTrack.BEATS_VISIBLE * Beat.NUM_SUBBEATS);
         foregroundContainer.y = DanceTrack.MARGIN_TOP - distanceBetweenSubbeats * (beat * Beat.NUM_SUBBEATS + subbeat);

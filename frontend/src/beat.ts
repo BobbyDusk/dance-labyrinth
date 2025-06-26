@@ -1,6 +1,11 @@
 import logger from "./logger";
 import { StaticObservable } from "./genericClasses";
 
+export interface BeatUpdate {
+    beat: number;
+    subbeat: number;
+}
+
 export class Beat extends StaticObservable {
     static NUM_SUBBEATS = 64;
     private static interval: ReturnType<typeof setInterval>; 
@@ -25,15 +30,19 @@ export class Beat extends StaticObservable {
         }
         Beat.interval = setInterval(() => {
             Beat.updateBeat();
-        }, (60 * 1000) / (Beat.bpm * Beat.NUM_SUBBEATS));
+        }, Beat.msBetweenSubbeats);
     }
 
-    static getTimeSinceStart(): number {
+    static get msSinceStart(): number {
         return Date.now() - Beat.startTime
     }
 
-    static setBpm(bpm: number) {
-        Beat.bpm = bpm;
+    static get msBetweenSubbeats(): number {
+        return (60 * 1000) / (Beat.bpm * Beat.NUM_SUBBEATS);
+    }
+
+    static get msBetweenBeats(): number {
+        return (60 * 1000) / Beat.bpm;
     }
 
     static msToBeat(time: number): { beat: number, subbeat: number } {

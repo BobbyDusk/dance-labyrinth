@@ -19,7 +19,7 @@ export class Audio {
     }
 
     static async playSong(url: string, bpm: number, numPrebeats: number) {
-        await Audio.playIntro(bpm, numPrebeats);
+        // await Audio.playIntro(bpm, numPrebeats);
         await Audio.play(url);
     }
 
@@ -38,5 +38,9 @@ export class Audio {
                 }, i * (60 * 1000 / bpm));
             }
         });
+    }
+
+    static stop() {
+        Howler.stop();
     }
 }
