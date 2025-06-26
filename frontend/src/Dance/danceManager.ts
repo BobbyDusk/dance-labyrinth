@@ -1,8 +1,12 @@
-import type { Arrow } from "./Arrow";
+import { Arrow } from "./Arrow";
 import logger from "../logger";
 import { DanceTrack } from "./danceTrack";
 import { Direction } from "./Direction";
 import { Beat } from "../beat";
+import { Signature } from "./Signature";
+import type { SignatureObject, Note } from "./Signature";
+import signatureObject from "../assets/signature.json"
+import { Audio } from "./Audio"
 
 enum PressQuality {
     Perfect = "Perfect",
@@ -15,20 +19,32 @@ enum PressQuality {
 
 export class DanceManager {
     private static instance: DanceManager = new DanceManager();
+
+    static TIME_OFFSET_PERFECT = 20
+    static TIME_OFFSET_GREAT = 50
+    static TIME_OFFSET_GOOD = 100
+    static TIME_OFFSET_OK = 200
+
+    static signature: Signature = new Signature();
     static noteIndex = 0
     static arrowsQueue: Arrow[] = []
     static noMoreNotes = false
     static autoReset = true
-    static timeOffsetPerfect = 20
-    static timeOffsetGreat = 50
-    static timeOffsetGood = 100
-    static timeOffsetOk = 200
 
 
     private constructor() {}
 
-    static async setup(container: HTMLElement) {
-        await DanceTrack.setup(container);
+    static async setup() {
+        DanceManager.signature.load(signatureObject as SignatureObject);
+        await DanceTrack.setup();
+        DanceTrack.setArrows(DanceManager.signature.notes.map(note => new Arrow(note)));
+        Beat.setBpm(DanceManager.signature.bpm);
+        Beat.subscribe(DanceTrack.update)
+    }
+
+    static start() {
+        Beat.reset();
+        Audio.playSong(DanceManager.signature.songUrl, DanceManager.signature.bpm, DanceTrack.BEATS_VISIBLE);
     }
 
     static press(direction: Direction) {
