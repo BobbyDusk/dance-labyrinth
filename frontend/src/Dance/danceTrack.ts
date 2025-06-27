@@ -24,11 +24,13 @@ const COLORS = [
 export class DanceTrack {
     private static instance: DanceTrack = new DanceTrack();
 
-    static BEATS_VISIBLE = 5;
-    static MARGIN_TOP = 100;
+    static NUM_BEATS_BEFORE = 5;
+    static NUM_BEATS_AFTER = 0.5;
+    static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
     static MAX_ALPHA = 0.75;
     static FADE_DURATION = 500;
     static FADE_INTERVAL = 10;
+    static SNAP_SUBBEAT_RESOLUTION = 16;
 
     static app: Application = new Application()
     static blocks: NoteBlock[] = [];
@@ -36,8 +38,11 @@ export class DanceTrack {
     static lightUpColumnsAlphas: number[] = [0, 0, 0, 0]
 
     static backgroundContainer: Container = new Container();
+    static viewport: Viewport;
     static foregroundContainer: Container = new Container();
     static blocksContainer: Container = new Container();
+    static distanceBetweenBeats: number = 0;
+    static distanceBetweenSubbeats: number = 0;
 
     private constructor() {
     }
@@ -50,6 +55,8 @@ export class DanceTrack {
             antialias: true,
             autoStart: false,
         });
+        DanceTrack.distanceBetweenBeats = DanceTrack.app.screen.height / DanceTrack.NUM_BEATS;
+        DanceTrack.distanceBetweenSubbeats = DanceTrack.distanceBetweenBeats / Beat.NUM_SUBBEATS;
 
         DanceTrack.setupStructure();
         DanceTrack.createLines();
@@ -61,29 +68,38 @@ export class DanceTrack {
     private static setupStructure() {
         DanceTrack.backgroundContainer.label = "background";
         DanceTrack.app.stage.addChild(DanceTrack.backgroundContainer);
-        let viewport = new Viewport({
+        DanceTrack.viewport = new Viewport({
             screenWidth: DanceTrack.app.screen.width,
             screenHeight: DanceTrack.app.screen.height,
             worldWidth: DanceTrack.app.screen.width,
             worldHeight: DanceTrack.app.screen.height,
             events: DanceTrack.app.renderer.events,
         });
-        DanceTrack.app.stage.addChild(viewport);
-        viewport.drag({
+        DanceTrack.app.stage.addChild(DanceTrack.viewport);
+        DanceTrack.viewport.drag({
             direction: "y"
         }).decelerate();
         DanceTrack.foregroundContainer.label = "foreground";
-        DanceTrack.foregroundContainer.y = DanceTrack.MARGIN_TOP;
-        viewport.addChild(DanceTrack.foregroundContainer);
+        DanceTrack.foregroundContainer.y = DanceTrack.NUM_BEATS_AFTER * DanceTrack.distanceBetweenBeats;
+        DanceTrack.viewport.addChild(DanceTrack.foregroundContainer);
         DanceTrack.blocksContainer.label = "blocks";
         DanceTrack.foregroundContainer.addChild(DanceTrack.blocksContainer);
+        DanceTrack.viewport.on("drag-end", DanceTrack.snapViewportToSubbeat);
+    }
+
+    private static snapViewportToSubbeat() {
+        let subbeat = -1 * Math.round(DanceTrack.viewport.y / DanceTrack.distanceBetweenSubbeats);
+        let snappingFactor = Beat.NUM_SUBBEATS / DanceTrack.SNAP_SUBBEAT_RESOLUTION;
+        let snappedSubbeat = Math.round(subbeat / snappingFactor) * snappingFactor;
+        DanceTrack.viewport.snap(0, snappedSubbeat * DanceTrack.distanceBetweenSubbeats, {topLeft: true});;
+        logger.debug(`snapped to beat: ${Math.floor(snappedSubbeat / Beat.NUM_SUBBEATS)}, subbeat ${snappedSubbeat % Beat.NUM_SUBBEATS}`);
     }
 
     private static createBlockTargets() {
         let lanes = [0, 1, 2, 3] as Lane[];
         lanes.forEach((lane: Lane) => {
             let sprite = NoteBlock.createGraphic(lane, true);
-            sprite.y = 100;
+            sprite.y = DanceTrack.NUM_BEATS_AFTER * DanceTrack.distanceBetweenBeats;
             sprite.x = DanceTrack.laneToX(lane);
             DanceTrack.app.stage.addChild(sprite);
         })
@@ -91,23 +107,25 @@ export class DanceTrack {
 
     private static createLines() {
         let graphics = new Graphics()
-        for (let i = -1; i < DanceTrack.BEATS_VISIBLE; i++) {
-            let height = DanceTrack.MARGIN_TOP + (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / DanceTrack.BEATS_VISIBLE * i
-            graphics
-                .moveTo(0, height)
-                .lineTo(DanceTrack.app.screen.width, height)
-                .stroke({ color: "white", pixelLine: true });
-            for (let j = 1; j < Beat.NUM_SUBBEATS; j++) {
-                let height = DanceTrack.MARGIN_TOP + (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / DanceTrack.BEATS_VISIBLE * (i + j / Beat.NUM_SUBBEATS)
-                let lightnessValue = 0.15
-                if (j % (Beat.NUM_SUBBEATS / 4) == 0) lightnessValue = 0.3
-                if (j == Beat.NUM_SUBBEATS / 2) lightnessValue = 0.5
-                let color = new Color([lightnessValue, lightnessValue, lightnessValue])
-                graphics
-                    .moveTo(0, height)
-                    .lineTo(DanceTrack.app.screen.width, height)
-                    .stroke({ color: color, pixelLine: true });
+        for (let i = -DanceTrack.NUM_BEATS_AFTER * Beat.NUM_SUBBEATS + 1; i < DanceTrack.NUM_BEATS_BEFORE * Beat.NUM_SUBBEATS; i++) {
+            let y = DanceTrack.NUM_BEATS_AFTER * DanceTrack.distanceBetweenBeats + DanceTrack.distanceBetweenSubbeats * i;
+            let lightnessValue;
+            if (i % Beat.NUM_SUBBEATS == 0) {
+                lightnessValue = 0.5
+            } else if (i % (Beat.NUM_SUBBEATS / 2) == 0) {
+                lightnessValue = 0.3
+            } else if (i % (Beat.NUM_SUBBEATS / 4) == 0) {
+                lightnessValue = 0.2
+            } else if (i % (Beat.NUM_SUBBEATS / 4) == 0) {
+                lightnessValue = 0.15
+            } else {
+                lightnessValue = 0.05
             }
+            let color = new Color([lightnessValue, lightnessValue, lightnessValue])
+            graphics
+                .moveTo(0, y)
+                .lineTo(DanceTrack.app.screen.width, y)
+                .stroke({ color: color, pixelLine: true });
         }
         graphics.label = "lines";
         DanceTrack.backgroundContainer.addChild(graphics);
@@ -143,9 +161,7 @@ export class DanceTrack {
         DanceTrack.blocks = noteblocks;
         DanceTrack.blocks.forEach((block: NoteBlock) => {
             DanceTrack.blocksContainer.addChild(block.graphic);
-            let distanceBetweenSubbeats = (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / (DanceTrack.BEATS_VISIBLE * Beat.NUM_SUBBEATS);
-            let lineNumber = block.beat * Beat.NUM_SUBBEATS + block.subbeat;
-            block.graphic.y = lineNumber * distanceBetweenSubbeats;
+            block.graphic.y = block.beat * DanceTrack.distanceBetweenBeats + block.subbeat * DanceTrack.distanceBetweenSubbeats;
             block.graphic.x = DanceTrack.laneToX(block.lane);
         });
         DanceTrack.app.render();
@@ -157,8 +173,7 @@ export class DanceTrack {
     }
 
     static update({ beat, subbeat }: BeatUpdate) {
-        let distanceBetweenSubbeats = (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / (DanceTrack.BEATS_VISIBLE * Beat.NUM_SUBBEATS);
-        DanceTrack.foregroundContainer.y = DanceTrack.MARGIN_TOP - distanceBetweenSubbeats * (beat * Beat.NUM_SUBBEATS + subbeat);
+        DanceTrack.viewport.y = -1 * (beat * DanceTrack.distanceBetweenBeats + subbeat * DanceTrack.distanceBetweenSubbeats);
         DanceTrack.app.render();
     }
 }
