@@ -1,33 +1,32 @@
 import { MoveDirection, setActiveDirection, activeDirection } from "../labyrinthApp"
 import { InputManager, InputType } from "../input"
-import { Direction } from "./Direction";
 import { DanceManager } from "./danceManager";
 
 export default function setupInput() {
-  InputManager.addInputAction("Left-Left");
-  InputManager.addInput("Left-Left", InputType.KEYPRESS, { key: "a" });
-  InputManager.addAction("Left-Left", () => setActiveDirection(MoveDirection.Left));
-  InputManager.addInputAction("Left-Right");
-  InputManager.addInput("Left-Right", InputType.KEYPRESS, { key: "f" });
-  InputManager.addAction("Left-Right", () => setActiveDirection(MoveDirection.Right));
-  InputManager.addInputAction("Left-Up");
-  InputManager.addInput("Left-Up", InputType.KEYPRESS, { key: "d" });
-  InputManager.addAction("Left-Up", () => setActiveDirection(MoveDirection.Up));
-  InputManager.addInputAction("Left-Down");
-  InputManager.addInput("Left-Down", InputType.KEYPRESS, { key: "s" });
-  InputManager.addAction("Left-Down", () => setActiveDirection(MoveDirection.Down));
-  InputManager.addInputAction("Right-Left");
-  InputManager.addInput("Right-Left", InputType.KEYPRESS, { key: "j" });
-  InputManager.addAction("Right-Left", () => DanceManager.press(Direction.Left));
-  InputManager.addInputAction("Right-Right");
-  InputManager.addInput("Right-Right", InputType.KEYPRESS, { key: ";" });
-  InputManager.addAction("Right-Right", () => DanceManager.press(Direction.Right));
-  InputManager.addInputAction("Right-Up");
-  InputManager.addInput("Right-Up", InputType.KEYPRESS, { key: "l" });
-  InputManager.addAction("Right-Up", () => DanceManager.press(Direction.Up));
-  InputManager.addInputAction("Right-Down");
-  InputManager.addInput("Right-Down", InputType.KEYPRESS, { key: "k" });
-  InputManager.addAction("Right-Down", () => DanceManager.press(Direction.Down));
+  InputManager.addInputAction("MoveLeft");
+  InputManager.addInput("MoveLeft", InputType.KEYPRESS, { key: "a" });
+  InputManager.addAction("MoveLeft", () => setActiveDirection(MoveDirection.Left));
+  InputManager.addInputAction("MoveRight");
+  InputManager.addInput("MoveRight", InputType.KEYPRESS, { key: "f" });
+  InputManager.addAction("MoveRight", () => setActiveDirection(MoveDirection.Right));
+  InputManager.addInputAction("MoveUp");
+  InputManager.addInput("MoveUp", InputType.KEYPRESS, { key: "d" });
+  InputManager.addAction("MoveUp", () => setActiveDirection(MoveDirection.Up));
+  InputManager.addInputAction("MoveDown");
+  InputManager.addInput("MoveDown", InputType.KEYPRESS, { key: "s" });
+  InputManager.addAction("MoveDown", () => setActiveDirection(MoveDirection.Down));
+  InputManager.addInputAction("Lane0");
+  InputManager.addInput("Lane0", InputType.KEYPRESS, { key: "j" });
+  InputManager.addAction("Lane0", () => DanceManager.press(0));
+  InputManager.addInputAction("Lane1");
+  InputManager.addInput("Lane1", InputType.KEYPRESS, { key: "k" });
+  InputManager.addAction("Lane1", () => DanceManager.press(1));
+  InputManager.addInputAction("Lane2");
+  InputManager.addInput("Lane2", InputType.KEYPRESS, { key: "l" });
+  InputManager.addAction("Lane2", () => DanceManager.press(2));
+  InputManager.addInputAction("Lane3");
+  InputManager.addInput("Lane3", InputType.KEYPRESS, { key: ";" });
+  InputManager.addAction("Lane3", () => DanceManager.press(3));
 
   /*
   document.addEventListener("keydown", (event: KeyboardEvent) => {

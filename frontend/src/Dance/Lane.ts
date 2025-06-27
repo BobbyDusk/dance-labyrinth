@@ -1,0 +1,1 @@
+export type Lane = 0 | 1 | 2 | 3

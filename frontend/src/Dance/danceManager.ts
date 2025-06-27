@@ -1,7 +1,7 @@
-import { Arrow } from "./Arrow";
+import { NoteBlock } from "./NoteBlock";
 import logger from "../logger";
 import { DanceTrack } from "./danceTrack";
-import { Direction } from "./Direction";
+import type { Lane } from "./Lane";
 import { Beat } from "../beat";
 import type { BeatUpdate } from "../beat";
 import { Signature } from "./Signature";
@@ -27,7 +27,7 @@ export class DanceManager {
     static TIME_OFFSET_OK = 400
 
     static signature: Signature = new Signature();
-    static arrowIndex = 0
+    static blockIndex = 0
 
 
     private constructor() {}
@@ -35,33 +35,33 @@ export class DanceManager {
     static async setup() {
         DanceManager.signature.load(signatureObject as SignatureObject);
         await DanceTrack.setup();
-        DanceTrack.setArrows(DanceManager.signature.notes.map(note => new Arrow(note)));
+        DanceTrack.setBlocks(DanceManager.signature.notes.map(note => new NoteBlock(note)));
         Beat.bpm = DanceManager.signature.bpm;
         Beat.subscribe(DanceManager.updateOnBeat);
     }
 
     static start() {
-        DanceManager.arrowIndex = 0
-        DanceTrack.arrows.forEach(arrow => {
-            arrow.sprite.visible = true;
+        DanceManager.blockIndex = 0
+        DanceTrack.blocks.forEach(block => {
+            block.graphic.visible = true;
         });
         Audio.stop();
         Beat.reset();
         Audio.playSong(DanceManager.signature.songUrl, DanceManager.signature.bpm, DanceTrack.BEATS_VISIBLE);
     }
 
-    static press(direction: Direction) {
-        logger.info(`Pressed ${Direction[direction]}`)
-        DanceTrack.lightUpColumn(direction)
-        this.updateArrowIndex({beat: Beat.beat, subbeat: Beat.subbeat});
-        let {pressQuality, arrow} = this.checkArrowHit(direction, Beat.beat, Beat.subbeat);
-        if (arrow) {
-            arrow.sprite.visible = false;
-            // DanceTrack.showPressFeedback(pressQuality, direction);
-            logger.info(`Hit ${arrow.toString()} with quality ${pressQuality}`);
+    static press(lane: Lane) {
+        logger.info(`Pressed ${lane} at beat ${Beat.beat}, subbeat ${Beat.subbeat}`);
+        DanceTrack.lightUpLane(lane)
+        DanceManager.updateBlockIndex({beat: Beat.beat, subbeat: Beat.subbeat});
+        let {pressQuality, block} = DanceManager.checkBlockHit(lane, Beat.beat, Beat.subbeat);
+        if (block) {
+            block.graphic.visible = false;
+            // DanceTrack.showPressFeedback(pressQuality, lane);
+            logger.info(`Hit ${block.string} with quality ${pressQuality}`);
         } else {
-            // DanceTrack.showPressFeedback(PressQuality.Miss, direction);
-            logger.info(`Missed press in direction ${Direction[direction]}`);
+            // DanceTrack.showPressFeedback(PressQuality.Miss, lane);
+            logger.info(`Missed press in lane ${lane}`);
         }
 
         /*
@@ -99,37 +99,37 @@ export class DanceManager {
             */
     }
 
-    private static updateArrowIndex({ beat, subbeat }: BeatUpdate) {
+    private static updateBlockIndex({ beat, subbeat }: BeatUpdate) {
         let minimumTime = Beat.beatToMs(beat, subbeat) - DanceManager.TIME_OFFSET_OK;
-        while (true && DanceManager.arrowIndex < DanceTrack.arrows.length) {
-            let arrow = DanceTrack.arrows[DanceManager.arrowIndex];
-            if (Beat.beatToMs(arrow.beat, arrow.subbeat) < minimumTime) {
-                DanceManager.arrowIndex++;
+        while (true && DanceManager.blockIndex < DanceTrack.blocks.length) {
+            let block = DanceTrack.blocks[DanceManager.blockIndex];
+            if (Beat.beatToMs(block.beat, block.subbeat) < minimumTime) {
+                DanceManager.blockIndex++;
             } else {
                 break;
             }
         }
     }
 
-    private static checkArrowHit(direction: Direction, beat: number, subbeat: number): {pressQuality: PressQuality, arrow: Arrow | null} {
-        let index = DanceManager.arrowIndex;
+    private static checkBlockHit(lane: Lane, beat: number, subbeat: number): {pressQuality: PressQuality, block: NoteBlock | null} {
+        let index = DanceManager.blockIndex;
         let pressTime = Date.now() - Beat.startTime;
         while(true) {
-            if (index >= DanceTrack.arrows.length) {
-                return {pressQuality: PressQuality.Miss, arrow: null};
+            if (index >= DanceTrack.blocks.length) {
+                return {pressQuality: PressQuality.Miss, block: null};
             }
-            let arrow = DanceTrack.arrows[index];
-            if (arrow.direction == direction && arrow.sprite.visible) {
-                let timeArrow = Beat.beatToMs(arrow.beat, arrow.subbeat);
-                logger.debug(`Checking arrow: ${arrow.toString()} at time ${timeArrow}ms, press time: ${pressTime}ms`);
-                if (Math.abs(pressTime - timeArrow) < DanceManager.TIME_OFFSET_PERFECT) {
-                    return {pressQuality: PressQuality.Perfect, arrow};
-                } else if (Math.abs(pressTime - timeArrow) < DanceManager.TIME_OFFSET_GREAT) {
-                    return {pressQuality: PressQuality.Great, arrow};
-                } else if (Math.abs(pressTime - timeArrow) < DanceManager.TIME_OFFSET_GOOD) {
-                    return {pressQuality: PressQuality.Good, arrow};
-                } else if (Math.abs(pressTime - timeArrow) < DanceManager.TIME_OFFSET_OK) {
-                    return {pressQuality: PressQuality.Ok, arrow};
+            let block = DanceTrack.blocks[index];
+            if (block.lane == lane && block.graphic.visible) {
+                let timeBlock = Beat.beatToMs(block.beat, block.subbeat);
+                logger.debug(`Checking block: ${block.string} at time ${timeBlock}ms, press time: ${pressTime}ms`);
+                if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_PERFECT) {
+                    return {pressQuality: PressQuality.Perfect, block: block};
+                } else if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_GREAT) {
+                    return {pressQuality: PressQuality.Great, block: block};
+                } else if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_GOOD) {
+                    return {pressQuality: PressQuality.Good, block: block};
+                } else if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_OK) {
+                    return {pressQuality: PressQuality.Ok, block: block};
                 }
             }
             index++;

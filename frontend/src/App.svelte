@@ -26,6 +26,19 @@
   >
     Reset
   </button>
+  <label for="scale" class="text-lg"> scale: </label>
+  <input
+    type="range"
+    id="scale"
+    min="0.25"
+    max="10"
+    step="0.01"
+    class="w-64"
+  />
+  <div>
+    <p>time: 1:05</p>
+    <p>beat: 2 <sup>3</sup>&frasl;<sub>64</sub></p>
+  </div>
   <div class="self-bottom" bind:this={musicContainer}></div>
   <button
     class="absolute top-0 right-0 m-4 bg-blue-500 text-white px-4 py-2 rounded"

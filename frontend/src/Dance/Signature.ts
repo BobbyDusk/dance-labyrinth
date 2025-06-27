@@ -1,7 +1,10 @@
+import type { Lane } from "./Lane";
+
 export interface Note {
     beat: number;
     subbeat: number;
-    direction: number;}
+    lane: Lane;
+}
 
 export interface SignatureObject {
     bpm: number;

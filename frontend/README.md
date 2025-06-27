@@ -1,4 +1,4 @@
-# Dance Labyrinth
+# Dancetopia
 
 ## Description
 
@@ -8,10 +8,6 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
 
 - Speed is defined by BPM.
 - The smallest precision is 1/64 of a beat.
-
-## JSON song file
-
-- *arrows* - beat, subbeat, direction with 0 = left, 1 = down, 2 = up, 3 = right
 
 ## TODO
 
@@ -40,3 +36,4 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
   - single player labyrinth
   - multiplayer labyrinth race
   - multiplayer bomberman 
+- support for controller and dance (DDR) mat. Imagine dancing with feet and moving with controller

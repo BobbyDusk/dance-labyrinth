@@ -1,16 +1,16 @@
 import { Application, Graphics, Sprite, Color, Container } from 'pixi.js';
-import { Arrow } from './Arrow';
+import { NoteBlock } from './NoteBlock';
 import logger from '../logger';
 import { Beat } from '../beat';
 import type { BeatUpdate } from '../beat';
-import { Direction } from './Direction';
+import type { Lane } from './Lane';
+import { Viewport } from "pixi-viewport";
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
 // animation for missing notes
 // animation for pressing without a note
 // different colors for the 4 columns
-// top arrows should be hollow
 
 
 const COLORS = [
@@ -31,9 +31,13 @@ export class DanceTrack {
     static FADE_INTERVAL = 10;
 
     static app: Application = new Application()
-    static arrows: Arrow[] = [];
+    static blocks: NoteBlock[] = [];
     static lightUpColumns: Graphics[] = []
     static lightUpColumnsAlphas: number[] = [0, 0, 0, 0]
+
+    static backgroundContainer: Container = new Container();
+    static foregroundContainer: Container = new Container();
+    static blocksContainer: Container = new Container();
 
     private constructor() {
     }
@@ -49,29 +53,38 @@ export class DanceTrack {
 
         DanceTrack.setupStructure();
         DanceTrack.createLines();
-        DanceTrack.createArrowTargets();
+        DanceTrack.createBlockTargets();
         DanceTrack.setupLightUpColumns();
         DanceTrack.app.render()
     }
 
     private static setupStructure() {
-        let backgroundContainer = new Container();
-        backgroundContainer.label = "background";
-        DanceTrack.app.stage.addChild(backgroundContainer);
-        let foregroundContainer = new Container();
-        foregroundContainer.y = DanceTrack.MARGIN_TOP;
-        foregroundContainer.label = "foreground";
-        DanceTrack.app.stage.addChild(foregroundContainer);
-        let arrowsContainer = new Container();
-        arrowsContainer.label = "arrows";
-        foregroundContainer.addChild(arrowsContainer);
+        DanceTrack.backgroundContainer.label = "background";
+        DanceTrack.app.stage.addChild(DanceTrack.backgroundContainer);
+        let viewport = new Viewport({
+            screenWidth: DanceTrack.app.screen.width,
+            screenHeight: DanceTrack.app.screen.height,
+            worldWidth: DanceTrack.app.screen.width,
+            worldHeight: DanceTrack.app.screen.height,
+            events: DanceTrack.app.renderer.events,
+        });
+        DanceTrack.app.stage.addChild(viewport);
+        viewport.drag({
+            direction: "y"
+        }).decelerate();
+        DanceTrack.foregroundContainer.label = "foreground";
+        DanceTrack.foregroundContainer.y = DanceTrack.MARGIN_TOP;
+        viewport.addChild(DanceTrack.foregroundContainer);
+        DanceTrack.blocksContainer.label = "blocks";
+        DanceTrack.foregroundContainer.addChild(DanceTrack.blocksContainer);
     }
 
-    private static createArrowTargets() {
-        [Direction.Left, Direction.Down, Direction.Up, Direction.Right].forEach((direction: Direction) => {
-            let sprite = Arrow.createArrowSprite(direction, true);
+    private static createBlockTargets() {
+        let lanes = [0, 1, 2, 3] as Lane[];
+        lanes.forEach((lane: Lane) => {
+            let sprite = NoteBlock.createGraphic(lane, true);
             sprite.y = 100;
-            sprite.x = DanceTrack.getXForDirection(direction);
+            sprite.x = DanceTrack.laneToX(lane);
             DanceTrack.app.stage.addChild(sprite);
         })
     }
@@ -97,14 +110,14 @@ export class DanceTrack {
             }
         }
         graphics.label = "lines";
-        DanceTrack.app.stage.getChildByLabel("background")!.addChild(graphics);
+        DanceTrack.backgroundContainer.addChild(graphics);
     }
 
 
     private static setupLightUpColumns() { 
         let container = new Container();
         container.label = "lightUpColumns";
-        DanceTrack.app.stage.getChildByLabel("background")!.addChild(container);
+        DanceTrack.backgroundContainer.addChild(container);
         for (let i = 0; i < 4; i++) {
             let graphics: Graphics = new Graphics()
             DanceTrack.lightUpColumns.push(graphics)
@@ -119,35 +132,33 @@ export class DanceTrack {
             }, 10)
         }
     }
-    
-    static lightUpColumn(direction: Direction) {
-        logger.debug(`Light up column: ${Direction[direction]}`)
-        DanceTrack.lightUpColumnsAlphas[direction] = DanceTrack.MAX_ALPHA
+
+    static lightUpLane(lane: Lane) {
+        logger.debug(`Light up lane: ${lane}`)
+        DanceTrack.lightUpColumnsAlphas[lane] = DanceTrack.MAX_ALPHA
     }
 
-    static setArrows(arrows: Arrow[]) {
-        let arrowsContainer = DanceTrack.app.stage.getChildByLabel("foreground")!.getChildByLabel("arrows")!;
-        arrowsContainer.removeChildren();
-        DanceTrack.arrows = arrows;
-        DanceTrack.arrows.forEach((arrow: Arrow) => {
-            arrowsContainer.addChild(arrow.sprite);
+    static setBlocks(noteblocks: NoteBlock[]) {
+        DanceTrack.blocksContainer.removeChildren();
+        DanceTrack.blocks = noteblocks;
+        DanceTrack.blocks.forEach((block: NoteBlock) => {
+            DanceTrack.blocksContainer.addChild(block.graphic);
             let distanceBetweenSubbeats = (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / (DanceTrack.BEATS_VISIBLE * Beat.NUM_SUBBEATS);
-            let lineNumber = arrow.beat * Beat.NUM_SUBBEATS + arrow.subbeat;
-            arrow.sprite.y = lineNumber * distanceBetweenSubbeats;
-            arrow.sprite.x = DanceTrack.getXForDirection(arrow.direction);
+            let lineNumber = block.beat * Beat.NUM_SUBBEATS + block.subbeat;
+            block.graphic.y = lineNumber * distanceBetweenSubbeats;
+            block.graphic.x = DanceTrack.laneToX(block.lane);
         });
         DanceTrack.app.render();
 
     }
 
-    static getXForDirection(direction: Direction): number {
-        return DanceTrack.app.screen.width / 8 * (direction * 2 + 1);
+    static laneToX(lane: Lane): number {
+        return DanceTrack.app.screen.width / 8 * (lane * 2 + 1);
     }
 
     static update({ beat, subbeat }: BeatUpdate) {
-        let foregroundContainer = DanceTrack.app.stage.getChildByLabel("foreground")!;
         let distanceBetweenSubbeats = (DanceTrack.app.screen.height - DanceTrack.MARGIN_TOP) / (DanceTrack.BEATS_VISIBLE * Beat.NUM_SUBBEATS);
-        foregroundContainer.y = DanceTrack.MARGIN_TOP - distanceBetweenSubbeats * (beat * Beat.NUM_SUBBEATS + subbeat);
+        DanceTrack.foregroundContainer.y = DanceTrack.MARGIN_TOP - distanceBetweenSubbeats * (beat * Beat.NUM_SUBBEATS + subbeat);
         DanceTrack.app.render();
     }
 }
