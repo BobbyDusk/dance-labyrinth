@@ -12,7 +12,6 @@ export class Beat extends StaticObservable {
 
 
     static bpm = 120;
-    static startTime = 0;
     static beat = 0;
     static subbeat = 0;
 
@@ -20,22 +19,27 @@ export class Beat extends StaticObservable {
         super();
     }
 
-    static reset() {
-        logger.info("Resetting Beat.")
-        Beat.beat = 0
-        Beat.subbeat = 0
-        Beat.startTime = Date.now()
-        if (Beat.interval) {
-            clearInterval(Beat.interval);
-        }
+    static start() {
+        logger.debug("Starting Beat.")
+        Beat.notify({ beat: Beat.beat, subbeat: Beat.subbeat });
         Beat.interval = setInterval(() => {
             Beat.updateBeat();
         }, Beat.msBetweenSubbeats);
     }
 
-    static get msSinceStart(): number {
-        return Date.now() - Beat.startTime
+    static stop() {
+        logger.debug("Stopping Beat.")
+        if (Beat.interval) {
+            clearInterval(Beat.interval);
+        }
     }
+
+    static reset() {
+        Beat.stop();
+        logger.debug("Resetting Beat.")
+        Beat.beat = 0
+        Beat.subbeat = 0
+   }
 
     static get msBetweenSubbeats(): number {
         return (60 * 1000) / (Beat.bpm * Beat.NUM_SUBBEATS);

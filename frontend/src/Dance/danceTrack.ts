@@ -91,7 +91,7 @@ export class DanceTrack {
         let subbeat = -1 * Math.round(DanceTrack.viewport.y / DanceTrack.distanceBetweenSubbeats);
         let snappingFactor = Beat.NUM_SUBBEATS / DanceTrack.SNAP_SUBBEAT_RESOLUTION;
         let snappedSubbeat = Math.round(subbeat / snappingFactor) * snappingFactor;
-        DanceTrack.viewport.snap(0, snappedSubbeat * DanceTrack.distanceBetweenSubbeats, {topLeft: true});;
+        DanceTrack.viewport.snap(0, snappedSubbeat * DanceTrack.distanceBetweenSubbeats, {topLeft: true, time: 100});;
         logger.debug(`snapped to beat: ${Math.floor(snappedSubbeat / Beat.NUM_SUBBEATS)}, subbeat ${snappedSubbeat % Beat.NUM_SUBBEATS}`);
     }
 
@@ -149,6 +149,14 @@ export class DanceTrack {
                 DanceTrack.app.render()
             }, 10)
         }
+    }
+
+    static reset() {
+        logger.debug("Resetting DanceTrack")
+        DanceTrack.blocks.forEach(block => {
+            block.graphic.visible = true;
+        });
+        DanceTrack.viewport.y = 0;
     }
 
     static lightUpLane(lane: Lane) {

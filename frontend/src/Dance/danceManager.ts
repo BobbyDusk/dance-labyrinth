@@ -7,7 +7,7 @@ import type { BeatUpdate } from "../beat";
 import { Signature } from "./Signature";
 import type { SignatureObject, Note } from "./Signature";
 import signatureObject from "../assets/signature.json"
-import { Audio } from "./Audio"
+import { Howl, Howler } from "howler";
 
 enum PressQuality {
     Perfect = "Perfect",
@@ -17,23 +17,29 @@ enum PressQuality {
     Miss = "Miss",
 }
 
-
 export class DanceManager {
     private static instance: DanceManager = new DanceManager();
 
-    static TIME_OFFSET_PERFECT = 50
-    static TIME_OFFSET_GREAT = 100
-    static TIME_OFFSET_GOOD = 200
-    static TIME_OFFSET_OK = 400
+    static TIME_OFFSET_PERFECT = 25
+    static TIME_OFFSET_GREAT = 50
+    static TIME_OFFSET_GOOD = 100
+    static TIME_OFFSET_OK = 200
 
     static signature: Signature = new Signature();
     static blockIndex = 0
+    static started: boolean = false;
+    static paused: boolean = true;
+    static song: Howl | null = null;
 
 
     private constructor() {}
 
     static async setup() {
         DanceManager.signature.load(signatureObject as SignatureObject);
+        DanceManager.song = new Howl({
+            src: [DanceManager.signature.songUrl],
+            autoplay: false,
+        });
         await DanceTrack.setup();
         DanceTrack.setBlocks(DanceManager.signature.notes.map(note => new NoteBlock(note)));
         Beat.bpm = DanceManager.signature.bpm;
@@ -41,14 +47,27 @@ export class DanceManager {
     }
 
     static start() {
-        DanceManager.blockIndex = 0
-        DanceTrack.blocks.forEach(block => {
-            block.graphic.visible = true;
-        });
-        Audio.stop();
-        Beat.reset();
-        Audio.playSong(DanceManager.signature.songUrl, DanceManager.signature.bpm, DanceTrack.BEATS_VISIBLE);
+        DanceManager.started = true;
+        DanceManager.paused = false;
+        DanceManager.song!.play();
+        Beat.start();
     }
+
+    static pause() {
+        DanceManager.paused = true;
+        DanceManager.song!.pause();
+        Beat.stop();
+    }
+
+    static reset() {
+        DanceManager.started = false;
+        DanceManager.blockIndex = 0
+        DanceManager.song!.stop();
+        DanceTrack.reset();
+        Beat.reset();
+        DanceManager.pause();
+    }
+
 
     static press(lane: Lane) {
         logger.info(`Pressed ${lane} at beat ${Beat.beat}, subbeat ${Beat.subbeat}`);
@@ -113,7 +132,7 @@ export class DanceManager {
 
     private static checkBlockHit(lane: Lane, beat: number, subbeat: number): {pressQuality: PressQuality, block: NoteBlock | null} {
         let index = DanceManager.blockIndex;
-        let pressTime = Date.now() - Beat.startTime;
+        let pressTime = Beat.beatToMs(beat, subbeat);
         while(true) {
             if (index >= DanceTrack.blocks.length) {
                 return {pressQuality: PressQuality.Miss, block: null};
