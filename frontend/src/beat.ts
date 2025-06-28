@@ -11,7 +11,7 @@ export class Beat extends StaticObservable {
     private static interval: ReturnType<typeof setInterval>; 
 
 
-    static bpm = 120;
+    static bpm = 0;
     static beat = 0;
     static subbeat = 0;
 
@@ -47,6 +47,10 @@ export class Beat extends StaticObservable {
 
     static get msBetweenBeats(): number {
         return (60 * 1000) / Beat.bpm;
+    }
+
+    static get time(): number {
+        return Beat.beatToMs(Beat.beat, Beat.subbeat);
     }
 
     static msToBeat(time: number): { beat: number, subbeat: number } {

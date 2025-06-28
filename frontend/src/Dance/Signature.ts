@@ -1,4 +1,5 @@
 import type { Lane } from "./Lane";
+import { Observable } from "../genericClasses";
 
 export interface Note {
     beat: number;
@@ -12,12 +13,13 @@ export interface SignatureObject {
     songUrl: string;
 }
 
-export class Signature {
+export class Signature extends Observable {
     bpm: number;
     notes: Note[];
     songUrl: string;
 
     constructor() {
+        super();
         this.bpm = 120;
         this.notes = [];
         this.songUrl = "";
@@ -27,6 +29,7 @@ export class Signature {
         this.bpm = signature.bpm;
         this.notes = signature.notes;
         this.songUrl = signature.songUrl;
+        this.notify(signature);
     }
 
     async loadFile(file: File): Promise<void> {
