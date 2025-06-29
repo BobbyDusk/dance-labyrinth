@@ -3,7 +3,6 @@
   import { danceManager } from "./DanceManager";
   import { Metronome, metronome } from "../Metronome";
 
-  let started = $state(false);
   let paused = $state(true);
   let beat = $state(0);
   let subbeat = $state(0);
@@ -12,6 +11,12 @@
 
   onMount(() => {
     metronome.on("beat", updateBeat);
+    metronome.on("started", () => {
+      paused = false;
+    });
+    metronome.on("stopped", () => {
+      paused = true;
+    });
     danceManager.chart.on("loaded", (chart) => {
       bpm = chart.bpm;
     });
@@ -26,7 +31,6 @@
   function togglePlayPause() {
     if (danceManager.paused) {
       danceManager.start();
-      started = true;
       paused = false;
     } else {
       danceManager.pause();
@@ -36,11 +40,6 @@
 
   function reset() {
     danceManager.reset();
-    started = false;
-    paused = true;
-    beat = 0;
-    subbeat = 0;
-    time = 0;
   }
 </script>
 
@@ -57,10 +56,8 @@
       class="bg-blue-500 text-white px-4 py-2 rounded w-24"
       onclick={togglePlayPause}
     >
-      {#if !started}
+      {#if paused}
         Start
-      {:else if paused}
-        Resume
       {:else}
         Pause
       {/if}

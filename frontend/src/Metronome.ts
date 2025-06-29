@@ -8,18 +8,42 @@ export interface Beat {
 
 export class Metronome extends EventEmitter {
     static NUM_SUBBEATS = 64;
-    private interval: ReturnType<typeof setInterval> | null = null; 
+    private interval: ReturnType<typeof setInterval> | null = null;
 
     bpm = 0;
-    beat = 0;
-    subbeat = 0;
+    #beat = 0;
+    #subbeat = 0;
 
     constructor() {
         super();
     }
 
+    get beat(): number {
+        return this.#beat;
+    }
+
+    get subbeat(): number {
+        return this.#subbeat;
+    }
+    set beat(value: number) {
+        if (value < 0) {
+            throw new Error("Beat cannot be negative");
+        }
+        this.#beat = value;
+        this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
+    }
+
+    set subbeat(value: number) {
+        if (value < 0 || value >= Metronome.NUM_SUBBEATS) {
+            throw new Error(`Subbeat must be between 0 and ${Metronome.NUM_SUBBEATS - 1}`);
+        }
+        this.#subbeat = value;
+        this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
+    }
+
     start() {
         logger.debug("Starting metronome.")
+        this.emit("started");
         this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
         this.interval = setInterval(() => {
             this.updateBeat();
@@ -28,6 +52,7 @@ export class Metronome extends EventEmitter {
 
     stop() {
         logger.debug("Stopping metronome.")
+        this.emit("stopped");
         if (this.interval) {
             clearInterval(this.interval);
         }
@@ -36,9 +61,10 @@ export class Metronome extends EventEmitter {
     reset() {
         this.stop();
         logger.debug("Resetting metronome.")
+        this.emit("reset");
         this.beat = 0
         this.subbeat = 0
-   }
+    }
 
     get msBetweenSubbeats(): number {
         return (60 * 1000) / (this.bpm * Metronome.NUM_SUBBEATS);
@@ -68,12 +94,12 @@ export class Metronome extends EventEmitter {
     }
 
     updateBeat() {
-        this.subbeat++
+        let newSubbeat = this.subbeat + 1;
         let previousBeat = this.beat;
-        if (this.subbeat >= Metronome.NUM_SUBBEATS) {
-            this.subbeat = 0;
+        if (newSubbeat >= Metronome.NUM_SUBBEATS) {
             this.beat++;
         }
+        this.subbeat = newSubbeat % Metronome.NUM_SUBBEATS;
         this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
         if (previousBeat !== this.beat) {
             if (this.beat % 2 === 0) {

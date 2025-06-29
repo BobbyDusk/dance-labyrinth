@@ -1,7 +1,7 @@
 import { Application, Graphics, Color, Container } from 'pixi.js';
 import { NoteBlock } from './NoteBlock';
 import logger from '../Logger';
-import { Metronome } from '../Metronome';
+import { metronome, Metronome } from '../Metronome';
 import type { Beat } from '../Metronome';
 import type { Lane } from './Lane';
 import { Viewport } from "pixi-viewport";
@@ -38,6 +38,7 @@ export class DanceTrack {
     blocksContainer: Container = new Container();
     distanceBetweenBeats: number = 0;
     distanceBetweenSubbeats: number = 0;
+    dragging: boolean = false;
 
     constructor() {
     }
@@ -80,7 +81,17 @@ export class DanceTrack {
         this.viewport.addChild(this.foregroundContainer);
         this.blocksContainer.label = "blocks";
         this.foregroundContainer.addChild(this.blocksContainer);
-        this.viewport.on("drag-end", this.snapViewportToSubbeat);
+        this.viewport.on("drag-start", () => {
+            logger.debug(`viewport drag started`);
+            this.dragging = true;
+            metronome.stop();
+        });
+        this.viewport.on("drag-end", () => {
+            logger.debug(`viewport drag ended`);
+            this.dragging = false;
+            this.snapViewportToSubbeat()
+        });
+        this.viewport.on("moved", () => logger.debug(`viewport moved`));
     }
 
     private snapViewportToSubbeat() {
@@ -89,6 +100,12 @@ export class DanceTrack {
         let snappedSubbeat = Math.round(subbeat / snappingFactor) * snappingFactor;
         this.viewport.snap(0, snappedSubbeat * this.distanceBetweenSubbeats, {topLeft: true, time: 100});
         logger.debug(`snapped to beat: ${Math.floor(snappedSubbeat / Metronome.NUM_SUBBEATS)}, subbeat ${snappedSubbeat % Metronome.NUM_SUBBEATS}`);
+
+        metronome.stop();
+        let newBeat = Math.floor(snappedSubbeat / Metronome.NUM_SUBBEATS);
+        let newSubbeat = snappedSubbeat % Metronome.NUM_SUBBEATS;
+        metronome.beat = newBeat;
+        metronome.subbeat = newSubbeat;
     }
 
     private createBlockTargets() {
