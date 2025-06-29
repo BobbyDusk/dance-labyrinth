@@ -25,19 +25,26 @@ export class Metronome extends EventEmitter {
     get subbeat(): number {
         return this.#subbeat;
     }
-    set beat(value: number) {
+
+    private set beat(value: number) {
         if (value < 0) {
             throw new Error("Beat cannot be negative");
         }
         this.#beat = value;
-        this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
     }
 
-    set subbeat(value: number) {
+    private set subbeat(value: number) {
         if (value < 0 || value >= Metronome.NUM_SUBBEATS) {
             throw new Error(`Subbeat must be between 0 and ${Metronome.NUM_SUBBEATS - 1}`);
         }
         this.#subbeat = value;
+    }
+
+    setBeat(beat: number, subbeat: number) {
+        let spilledBeats = Math.floor(subbeat / Metronome.NUM_SUBBEATS);
+        subbeat = subbeat % Metronome.NUM_SUBBEATS;
+        this.beat = beat + spilledBeats;
+        this.subbeat = subbeat;
         this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
     }
 

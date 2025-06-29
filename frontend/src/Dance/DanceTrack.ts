@@ -91,21 +91,25 @@ export class DanceTrack {
             this.dragging = false;
             this.snapViewportToSubbeat()
         });
-        this.viewport.on("moved", () => logger.debug(`viewport moved`));
+        this.viewport.on("moved", () => this.updateWhileDragging());
+    }
+
+    private updateWhileDragging() {
+        if (this.dragging) {
+            let subbeat = -1 * Math.round(this.viewport.y / this.distanceBetweenSubbeats);
+            metronome.setBeat(0, subbeat);
+        }
     }
 
     private snapViewportToSubbeat() {
         let subbeat = -1 * Math.round(this.viewport.y / this.distanceBetweenSubbeats);
         let snappingFactor = Metronome.NUM_SUBBEATS / DanceTrack.SNAP_SUBBEAT_RESOLUTION;
         let snappedSubbeat = Math.round(subbeat / snappingFactor) * snappingFactor;
-        this.viewport.snap(0, snappedSubbeat * this.distanceBetweenSubbeats, {topLeft: true, time: 100});
+        this.viewport.snap(0, snappedSubbeat * this.distanceBetweenSubbeats, { topLeft: true, time: 100 });
         logger.debug(`snapped to beat: ${Math.floor(snappedSubbeat / Metronome.NUM_SUBBEATS)}, subbeat ${snappedSubbeat % Metronome.NUM_SUBBEATS}`);
 
         metronome.stop();
-        let newBeat = Math.floor(snappedSubbeat / Metronome.NUM_SUBBEATS);
-        let newSubbeat = snappedSubbeat % Metronome.NUM_SUBBEATS;
-        metronome.beat = newBeat;
-        metronome.subbeat = newSubbeat;
+        metronome.setBeat(0, snappedSubbeat);
     }
 
     private createBlockTargets() {
@@ -145,7 +149,7 @@ export class DanceTrack {
     }
 
 
-    private setupLightLanes() { 
+    private setupLightLanes() {
         let container = new Container();
         container.label = "lightLanes";
         this.backgroundContainer.addChild(container);
