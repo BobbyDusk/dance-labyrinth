@@ -1,5 +1,5 @@
 import { Graphics } from "pixi.js";
-import type { Note } from "./Signature";
+import type { Note } from "./Chart";
 import type { Lane } from "./Lane";
 
 

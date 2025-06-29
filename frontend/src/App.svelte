@@ -2,8 +2,8 @@
   import { onMount } from "svelte";
   import setupInput from "./Dance/inputSetup";
   import ChartEditor from "./ChartEditor.svelte";
-  import { DanceManager } from "./Dance/danceManager";
-  import { DanceTrack } from "./Dance/danceTrack";
+  import { danceManager } from "./Dance/DanceManager";
+  import { danceTrack } from "./Dance/DanceTrack";
   import preloadAssets from "./assets";
   import Controls from "./Dance/Controls.svelte";
 
@@ -14,8 +14,8 @@
   onMount(async () => {
     await preloadAssets();
     setupInput();
-    await DanceManager.setup();
-    musicContainer!.appendChild(DanceTrack.app.canvas);
+    await danceManager.setup();
+    musicContainer!.appendChild(danceTrack.app.canvas);
   });
 </script>
 

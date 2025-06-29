@@ -1,5 +1,5 @@
-import logger from "./logger";
-import { StaticObservable, Observable } from "./genericClasses";
+import logger from "./Logger";
+import EventEmitter from 'eventemitter3';
 
 export enum InputType {
   KEYPRESS = "KeyPress",
@@ -20,21 +20,20 @@ export interface ButtonConfig {
 }
 
 export class InputManager {
-  private static instance: InputManager = new InputManager();
-  private inputActions: { [name: string]: InputAction } = {};
+  private inputGroups: { [name: string]: InputGroup } = {};
 
-  private constructor() {
+  constructor() {
   }
 
-  static addInputAction(name: string) {
-    if (InputManager.instance.inputActions[name]) {
-      logger.warn(`Input action with name ${name} already exists.`);
+  addInputGroup(name: string) {
+    if (this.inputGroups[name]) {
+      logger.warn(`Input group with name ${name} already exists.`);
       return;
     }
-    InputManager.instance.inputActions[name] = new InputAction();
+    this.inputGroups[name] = new InputGroup();
   }
 
-  static addInput(InputAction: string, type: InputType, config: KeyPressConfig | ButtonConfig) {
+  addInput(inputGroupName: string, type: InputType, config: KeyPressConfig | ButtonConfig) {
     let input: Input;
     switch (type) {
       case InputType.KEYPRESS:
@@ -44,28 +43,36 @@ export class InputManager {
         console.error(`Input type ${type} is not supported.`);
         return;
     }
-    InputManager.instance.inputActions[InputAction].addInput(input)
+    this.inputGroups[inputGroupName].addInput(input);
   }
 
-  static addAction(InputAction: string, action: () => void) {
-    InputManager.instance.inputActions[InputAction].subscribe(action);
+  addAction(inputGroupName: string, action: () => void) {
+    this.inputGroups[inputGroupName].on("executed", action);
   }
 }
 
-class InputAction extends Observable {
+// multiple inputs
+class InputGroup extends EventEmitter {
   protected inputs: Input[] = [];
 
   addInput(input: Input) {
-    input.subscribe(this.notify.bind(this));
+    input.on("executed", () => {
+      this.emit("executed", input);
+    });
     this.inputs.push(input);
   }
 
   removeInput(input: Input) {
+    input.removeAllListeners("executed");
     this.inputs = this.inputs.filter(i => i !== input);
   }
 }
 
-class Input extends Observable {
+// Single input
+class Input extends EventEmitter {
+  notify() {
+    this.emit("executed");
+  }
 }
 
 class KeyPress extends Input {
@@ -79,3 +86,5 @@ class KeyPress extends Input {
     })
   }
 }
+
+export const inputManager = new InputManager();

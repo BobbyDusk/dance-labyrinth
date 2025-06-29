@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { DanceManager } from "./danceManager";
-  import { Beat } from "../beat";
-  import { on } from "svelte/events";
+  import { danceManager } from "./DanceManager";
+  import { Metronome, metronome } from "../Metronome";
 
   let started = $state(false);
   let paused = $state(true);
@@ -12,31 +11,31 @@
   let bpm = $state(0);
 
   onMount(() => {
-    Beat.subscribe(updateBeat);
-    DanceManager.signature.subscribe((signature) => {
-      bpm = signature.bpm;
+    metronome.on("beat", updateBeat);
+    danceManager.chart.on("loaded", (chart) => {
+      bpm = chart.bpm;
     });
   });
 
   function updateBeat() {
-    beat = Beat.beat;
-    subbeat = Beat.subbeat;
-    time = Beat.time;
+    beat = metronome.beat;
+    subbeat = metronome.subbeat;
+    time = metronome.time;
   }
 
   function togglePlayPause() {
-    if (DanceManager.paused) {
-      DanceManager.start();
+    if (danceManager.paused) {
+      danceManager.start();
       started = true;
       paused = false;
     } else {
-      DanceManager.pause();
+      danceManager.pause();
       paused = true;
     }
   }
 
   function reset() {
-    DanceManager.reset();
+    danceManager.reset();
     started = false;
     paused = true;
     beat = 0;
@@ -49,7 +48,7 @@
   <div>
     <p>bpm: {bpm}</p>
     <p>
-      beat: <span class="inline-block w-8 text-end">{beat}</span> <sup><span class="inline-block w-4 text-end">{subbeat}</span></sup>&frasl;<sub>{Beat.NUM_SUBBEATS}</sub>
+      beat: <span class="inline-block w-8 text-end">{beat}</span> <sup><span class="inline-block w-4 text-end">{subbeat}</span></sup>&frasl;<sub>{Metronome.NUM_SUBBEATS}</sub>
     </p>
     <p>time: {new Date(time).toISOString().substring(14, 23)}</p>
   </div>
