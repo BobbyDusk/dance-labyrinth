@@ -31,10 +31,8 @@
   function togglePlayPause() {
     if (danceManager.paused) {
       danceManager.start();
-      paused = false;
     } else {
       danceManager.pause();
-      paused = true;
     }
   }
 

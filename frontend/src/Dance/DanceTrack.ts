@@ -59,7 +59,6 @@ export class DanceTrack {
         this.createLines();
         this.createBlockTargets();
         this.setupLightLanes();
-        this.app.render()
     }
 
     private setupStructure() {
@@ -75,7 +74,7 @@ export class DanceTrack {
         this.app.stage.addChild(this.viewport);
         this.viewport.drag({
             direction: "y"
-        }).decelerate();
+        });
         this.foregroundContainer.label = "foreground";
         this.foregroundContainer.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
         this.viewport.addChild(this.foregroundContainer);
@@ -105,7 +104,7 @@ export class DanceTrack {
         let subbeat = -1 * Math.round(this.viewport.y / this.distanceBetweenSubbeats);
         let snappingFactor = Metronome.NUM_SUBBEATS / DanceTrack.SNAP_SUBBEAT_RESOLUTION;
         let snappedSubbeat = Math.round(subbeat / snappingFactor) * snappingFactor;
-        this.viewport.snap(0, snappedSubbeat * this.distanceBetweenSubbeats, { topLeft: true, time: 100 });
+        this.viewport.top = snappedSubbeat * this.distanceBetweenSubbeats;
         logger.debug(`snapped to beat: ${Math.floor(snappedSubbeat / Metronome.NUM_SUBBEATS)}, subbeat ${snappedSubbeat % Metronome.NUM_SUBBEATS}`);
 
         metronome.stop();
@@ -186,8 +185,7 @@ export class DanceTrack {
     }
 
     update({ beat, subbeat }: Beat) {
-        this.viewport.y = -1 * (beat * this.distanceBetweenBeats + subbeat * this.distanceBetweenSubbeats);
-        this.app.render();
+        this.viewport.top = beat * this.distanceBetweenBeats + subbeat * this.distanceBetweenSubbeats;
     }
 }
 
