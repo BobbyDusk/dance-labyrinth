@@ -72,7 +72,7 @@ export class DanceManager {
         this.updateBlockIndex({beat: metronome.beat, subbeat: metronome.subbeat});
         let {pressQuality, block} = this.checkBlockHit(lane, metronome.beat, metronome.subbeat);
         if (block) {
-            block.graphic.visible = false;
+            block.graphics.visible = false;
             // danceTrack.showPressFeedback(pressQuality, lane);
             logger.info(`Hit ${block.string} with quality ${pressQuality}`);
         } else {
@@ -135,9 +135,8 @@ export class DanceManager {
                 return {pressQuality: PressQuality.Miss, block: null};
             }
             let block = danceTrack.blocks[index];
-            if (block.lane == lane && block.graphic.visible) {
+            if (block.lane == lane && block.graphics.visible) {
                 let timeBlock = metronome.beatToMs(block.beat, block.subbeat);
-                logger.debug(`Checking block: ${block.string} at time ${timeBlock}ms, press time: ${pressTime}ms`);
                 if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_PERFECT) {
                     return {pressQuality: PressQuality.Perfect, block: block};
                 } else if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_GREAT) {

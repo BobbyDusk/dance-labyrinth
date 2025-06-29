@@ -4,7 +4,7 @@ import type { Lane } from "./Lane";
 
 
 export class NoteBlock {
-    graphic: Graphics
+    graphics: Graphics
     beat: number
     subbeat: number
     lane: Lane
@@ -13,13 +13,13 @@ export class NoteBlock {
         this.beat = beat
         this.subbeat = subbeat
         this.lane = lane
-        this.graphic = NoteBlock.createGraphic(lane)
+        this.graphics = NoteBlock.createGraphic(lane)
     }
 
 
     destruct() {
-        this.graphic.parent?.removeChild(this.graphic);
-        this.graphic.destroy();
+        this.graphics.parent?.removeChild(this.graphics);
+        this.graphics.destroy();
     }
 
 

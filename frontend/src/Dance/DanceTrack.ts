@@ -5,6 +5,7 @@ import { Metronome } from '../Metronome';
 import type { Beat } from '../Metronome';
 import type { Lane } from './Lane';
 import { Viewport } from "pixi-viewport";
+import { LightLane } from './LightLane';
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
@@ -13,27 +14,23 @@ import { Viewport } from "pixi-viewport";
 // different colors for the 4 columns
 
 
-const COLORS = [
-    "#FAD54B",
-    "#4AF97E",
-    "#4B58FA",
-    "#FA4D4B",
-]
 
 
 export class DanceTrack {
     static NUM_BEATS_BEFORE = 5;
     static NUM_BEATS_AFTER = 0.5;
     static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
-    static MAX_ALPHA = 0.75;
-    static FADE_DURATION = 500;
-    static FADE_INTERVAL = 10;
     static SNAP_SUBBEAT_RESOLUTION = 16;
+    static LANE_COLORS = [
+        "#FAD54B",
+        "#4AF97E",
+        "#4B58FA",
+        "#FA4D4B",
+    ]
 
     app: Application = new Application()
     blocks: NoteBlock[] = [];
-    lightUpColumns: Graphics[] = []
-    lightUpColumnsAlphas: number[] = [0, 0, 0, 0]
+    lightLanes: LightLane[] = []
 
     backgroundContainer: Container = new Container();
     viewport!: Viewport;
@@ -43,16 +40,16 @@ export class DanceTrack {
     distanceBetweenSubbeats: number = 0;
 
     constructor() {
-        this.setup();
     }
 
     async setup() {
+        // @ts-expect-error: Expose app for PixiJS devtools
         globalThis.__PIXI_APP__ = this.app; // for PixiJS devtools
         await this.app.init({
             width: 600,
             height: 1000,
             antialias: true,
-            autoStart: false,
+            autoStart: true,
         });
         this.distanceBetweenBeats = this.app.screen.height / DanceTrack.NUM_BEATS;
         this.distanceBetweenSubbeats = this.distanceBetweenBeats / Metronome.NUM_SUBBEATS;
@@ -60,7 +57,7 @@ export class DanceTrack {
         this.setupStructure();
         this.createLines();
         this.createBlockTargets();
-        this.setupLightUpColumns();
+        this.setupLightLanes();
         this.app.render()
     }
 
@@ -131,48 +128,36 @@ export class DanceTrack {
     }
 
 
-    private setupLightUpColumns() { 
+    private setupLightLanes() { 
         let container = new Container();
-        container.label = "lightUpColumns";
+        container.label = "lightLanes";
         this.backgroundContainer.addChild(container);
         for (let i = 0; i < 4; i++) {
-            let graphics: Graphics = new Graphics()
-            this.lightUpColumns.push(graphics)
-            container.addChild(graphics)
-            let width = this.app.screen.width / 4
-            let height = this.app.screen.height
-            setInterval(() => {
-                this.lightUpColumnsAlphas[i] = Math.max(0, this.lightUpColumnsAlphas[i] - (this.MAX_ALPHA / (this.FADE_DURATION / this.FADE_INTERVAL)))
-                this.lightUpColumns[i].clear()
-                this.lightUpColumns[i].rect(i * width, 0, width, height).fill({color: COLORS[i], alpha: this.lightUpColumnsAlphas[i]})
-                this.app.render()
-            }, 10)
+            this.lightLanes[i] = new LightLane(i as Lane);
+            container.addChild(this.lightLanes[i].graphics);
         }
     }
 
     reset() {
         logger.debug("Resetting DanceTrack")
         this.blocks.forEach(block => {
-            block.graphic.visible = true;
+            block.graphics.visible = true;
         });
         this.viewport.y = 0;
     }
 
     lightUpLane(lane: Lane) {
-        logger.debug(`Light up lane: ${lane}`)
-        this.lightUpColumnsAlphas[lane] = DanceTrack.MAX_ALPHA
+        this.lightLanes[lane].lightUp();
     }
 
     setBlocks(noteblocks: NoteBlock[]) {
         this.blocksContainer.removeChildren();
         this.blocks = noteblocks;
         this.blocks.forEach((block: NoteBlock) => {
-            this.blocksContainer.addChild(block.graphic);
-            block.graphic.y = block.beat * this.distanceBetweenBeats + block.subbeat * this.distanceBetweenSubbeats;
-            block.graphic.x = this.laneToX(block.lane);
+            this.blocksContainer.addChild(block.graphics);
+            block.graphics.y = block.beat * this.distanceBetweenBeats + block.subbeat * this.distanceBetweenSubbeats;
+            block.graphics.x = this.laneToX(block.lane);
         });
-        this.app.render();
-
     }
 
     laneToX(lane: Lane): number {
