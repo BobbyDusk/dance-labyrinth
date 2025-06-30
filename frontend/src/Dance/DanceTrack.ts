@@ -8,6 +8,7 @@ import { Viewport } from "pixi-viewport";
 import { LightLane } from './LightLane';
 import { LANE_COLORS } from './LaneColors';
 import EventEmitter from 'eventemitter3';
+import { danceManager } from './DanceManager';
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
@@ -22,7 +23,7 @@ export class DanceTrack extends EventEmitter {
     static NUM_BEATS_AFTER = 0.5;
     static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
 
-    #snappingInterval: SnappingInterval = 4;
+    #snappingInterval: SnappingInterval = 16;
 
     app: Application = new Application()
     blocks: NoteBlock[] = [];
@@ -38,6 +39,8 @@ export class DanceTrack extends EventEmitter {
     distanceBetweenSubbeats: number = 0;
 
     dragging: boolean = false;
+
+    private scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
     constructor() {
         super();
@@ -98,6 +101,14 @@ export class DanceTrack extends EventEmitter {
             this.dragging = false;
             this.snapViewportToSubbeat()
         });
+        this.viewport.on("wheel-scroll", () => {
+            if (this.scrollTimeout) {
+                clearTimeout(this.scrollTimeout);
+            }
+            this.scrollTimeout = setTimeout(() => {
+                this.snapViewportToSubbeat();
+            }, 250);
+        })
         this.viewport.on("moved", () => this.updateWhileDragging());
         this.ghostBlock = new NoteBlock({
             beat: 0,
@@ -156,6 +167,7 @@ export class DanceTrack extends EventEmitter {
             }
             this.blocksContainer.addChildAt(newBlock.graphics, index);
             this.blocks.splice(index, 0, newBlock);
+            danceManager.updateChart();
             logger.debug(`Added block at beat ${newBlock.beat}, subbeat ${newBlock.subbeat}, lane ${newBlock.lane}`);
         }
     }
@@ -165,6 +177,7 @@ export class DanceTrack extends EventEmitter {
         if (index !== -1) {
             this.blocks.splice(index, 1);
             this.blocksContainer.removeChild(block.graphics);
+            danceManager.updateChart();
             logger.debug(`Removed block at beat ${block.beat}, subbeat ${block.subbeat}, lane ${block.lane}`);
         } else {
             logger.warn(`Tried to remove block that does not exist: ${block}`);
@@ -255,11 +268,16 @@ export class DanceTrack extends EventEmitter {
     }
 
     setBlocks(noteblocks: NoteBlock[]) {
+        this.blocks.forEach((block: NoteBlock) => {
+            block.destruct();
+        });
         this.blocksContainer.removeChildren();
         this.blocks = noteblocks;
         this.blocks.forEach((block: NoteBlock) => {
             this.blocksContainer.addChild(block.graphics);
         });
+        danceManager.updateChart();
+        logger.debug(`Set ${this.blocks.length} blocks`);
     }
 
     laneToX(lane: Lane): number {

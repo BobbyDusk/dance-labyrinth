@@ -5,8 +5,6 @@ import type { Lane } from "./Lane";
 import { metronome } from "../Metronome";
 import type { Beat } from "../Metronome";
 import { Chart } from "./Chart";
-import type { ChartObject } from "./Chart";
-import chartObject from "../assets/chart.json"
 import { Howl } from "howler";
 
 enum PressQuality {
@@ -32,14 +30,17 @@ export class DanceManager {
     constructor() {}
 
     async setup() {
-        this.chart.load(chartObject as ChartObject);
+        try {
+            this.chart.loadFromLocalStorage();
+        } catch (error) {
+            logger.debug("Failed to load chart from local storage, loading default chart.");
+        }
         this.song = new Howl({
             src: [this.chart.songUrl],
             autoplay: false,
         });
         await danceTrack.setup();
-        danceTrack.setBlocks(this.chart.notes.map(note => new NoteBlock(note)));
-        metronome.bpm = this.chart.bpm;
+        this.updateFromChart();
         metronome.on("beat", this.updateOnBeat);
     }
 
@@ -123,6 +124,30 @@ export class DanceManager {
         }
     }
 
+    updateFromChart() {
+        danceTrack.setBlocks(this.chart.notes.map(note => new NoteBlock(note)));
+        metronome.bpm = this.chart.bpm;
+    }
+
+    updateChart(): void {
+        this.chart.notes = danceTrack.blocks.map(block => ({
+            beat: block.beat,
+            subbeat: block.subbeat,
+            lane: block.lane
+        }));
+        this.chart.bpm = metronome.bpm;
+        this.chart.saveToLocalStorage();
+    }
+
+    async loadChart(file: File): Promise<void> {
+        await this.chart.loadFromFile(file);
+        this.updateFromChart();
+    }
+
+    saveChart(): File {
+        this.updateChart();
+        return this.chart.saveToFile();
+    }
 
     private updateOnBeat(beat: Beat) {
         danceTrack.update(beat);

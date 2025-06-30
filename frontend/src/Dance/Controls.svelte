@@ -9,8 +9,8 @@
   let beat = $state(0);
   let subbeat = $state(0);
   let time = $state(0);
-  let bpm = $state(0);
-  let snappingInterval: SnappingInterval = $state(4);
+  let bpm = $state(120);
+  let snappingInterval: SnappingInterval = $state(danceTrack.snappingInterval);
 
   onMount(() => {
     metronome.on("beat", updateBeat);
@@ -48,13 +48,15 @@
   <div>
     <p>bpm: {bpm}</p>
     <p>
-      beat: <span class="inline-block w-8 text-end">{beat}</span> <sup><span class="inline-block w-4 text-end">{subbeat}</span></sup>&frasl;<sub>{Metronome.NUM_SUBBEATS}</sub>
+      beat: <span class="inline-block w-8 text-end">{beat}</span>
+      <sup><span class="inline-block w-4 text-end">{subbeat}</span></sup
+      >&frasl;<sub>{Metronome.NUM_SUBBEATS}</sub>
     </p>
     <p>time: {new Date(time).toISOString().substring(14, 23)}</p>
   </div>
   <div>
     <button
-      class="bg-blue-500 text-white px-4 py-2 rounded w-24"
+      class="bg-blue-500 text-white px-4 py-2 rounded w-24 cursor-pointer"
       onclick={togglePlayPause}
     >
       {#if paused}
@@ -64,10 +66,40 @@
       {/if}
     </button>
     <button
-      class="bg-blue-500 text-white px-4 py-2 rounded w-24"
+      class="bg-blue-500 text-white px-4 py-2 rounded w-24 cursor-pointer"
       onclick={reset}
     >
       Reset
+    </button>
+    <button
+      class="bg-blue-500 text-white px-4 py-2 rounded w-36 cursor-pointer"
+      onclick={() => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".chart";
+        fileInput.onchange = (event) => {
+          const target = event.target as HTMLInputElement;
+          if (target.files && target.files.length > 0) {
+            danceManager.loadChart(target.files[0]);
+          }
+        };
+        fileInput.click();
+      }}>Load Chart</button
+    >
+    <button
+      class="bg-blue-500 text-white px-4 py-2 rounded w-36 cursor-pointer"
+      onclick={() => {
+        let file = danceManager.saveChart();
+        const url = URL.createObjectURL(file);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "song.chart";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }}
+    >
+      Save Chart
     </button>
   </div>
   <div>

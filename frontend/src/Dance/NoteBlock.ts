@@ -6,6 +6,7 @@ import { Metronome } from "../Metronome";
 import type { Beat } from "../Metronome";
 import { danceTrack } from "./DanceTrack";
 import { metronome } from "../Metronome";
+import { danceManager } from "./DanceManager";
 
 
 export class NoteBlock {
