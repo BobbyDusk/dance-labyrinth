@@ -88,9 +88,8 @@ export class Metronome extends EventEmitter {
     reset() {
         this.stop();
         logger.debug("Resetting metronome.")
+        this.setBeat({ beat: 0, subbeat: 0 });
         this.emit("reset");
-        this.beat = 0
-        this.subbeat = 0
     }
 
     get msBetweenSubbeats(): number {
