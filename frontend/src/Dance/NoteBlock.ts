@@ -2,19 +2,23 @@ import { Graphics } from "pixi.js";
 import type { Note } from "./Chart";
 import type { Lane } from "./Lane";
 import { LANE_COLORS } from "./LaneColors";
+import { Metronome } from "../Metronome";
+import type { Beat } from "../Metronome";
+import { danceTrack } from "./DanceTrack";
 
 
 export class NoteBlock {
+    static HEIGHT = 25;
+
     graphics: Graphics
-    beat: number
-    subbeat: number
-    lane: Lane
+    #beat!: number
+    #subbeat!: number
+    #lane!: Lane
 
     constructor({beat, subbeat, lane}: Note) {
-        this.beat = beat
-        this.subbeat = subbeat
+        this.graphics = this.createGraphic()
+        this.setBeat({beat, subbeat});
         this.lane = lane
-        this.graphics = NoteBlock.createGraphic(lane)
     }
 
 
@@ -28,23 +32,52 @@ export class NoteBlock {
         return `NoteBlock(beat: ${this.beat}, subbeat: ${this.subbeat}, lane: ${this.lane})`
     }
 
-    static createGraphic(lane: Lane, onlyOutline = false): Graphics {
-        let color = LANE_COLORS[lane];
-        let rect = new Graphics()
-        let width = 150;
-        let height = 25;
-        if (onlyOutline) {
-            rect.setStrokeStyle({width: 3, color: 0xFFFFFF, alpha: 0.5})
-                .moveTo(0, 0)
-                .lineTo(width, 0)
-                .moveTo(0, height)
-                .lineTo(width, height)
-                .stroke();
-        } else {
-            rect.setFillStyle({color: 0xFFFFFF}).rect(0, 0, width, height).fill()
+    get lane(): Lane {
+        return this.#lane;
+    }
+
+    set lane(value: Lane) {
+        if (value < 0 || value > 3) {
+            throw new Error(`Invalid lane: ${value}. Must be between 0 and 3.`);
         }
-        rect.tint = color;
-        rect.pivot.set(width / 2, height / 2);
+        this.#lane = value;
+        this.graphics.tint = LANE_COLORS[value];
+        this.graphics.x = danceTrack.laneToX(this.lane);
+    }
+
+    get beat(): number {
+        return this.#beat;
+    }
+
+    get subbeat(): number {
+        return this.#subbeat;
+    }
+
+    private set beat(value: number) {
+        if (value < 0) {
+            throw new Error("Beat cannot be negative");
+        }
+        this.#beat = value;
+    }
+
+    private set subbeat(value: number) {
+        if (value < 0 || value >= Metronome.NUM_SUBBEATS) {
+            throw new Error(`Subbeat must be between 0 and ${Metronome.NUM_SUBBEATS - 1}`);
+        }
+        this.#subbeat = value;
+    }
+
+    setBeat({beat, subbeat}: Beat) {
+        this.beat = beat;
+        this.subbeat = subbeat;
+        this.graphics.y = danceTrack.beatToY({beat: this.beat, subbeat: this.subbeat});
+    }
+
+    private createGraphic(): Graphics {
+        let rect = new Graphics()
+        let width = danceTrack.app.screen.width / 4;
+        rect.setFillStyle({color: 0xFFFFFF}).rect(0, 0, width, NoteBlock.HEIGHT).fill()
+        rect.pivot.set(width / 2, NoteBlock.HEIGHT / 2);
         rect.cullable = true;
         return rect;
     }

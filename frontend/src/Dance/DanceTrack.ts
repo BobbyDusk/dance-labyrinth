@@ -1,4 +1,4 @@
-import { Application, Graphics, Color, Container, Point } from 'pixi.js';
+import { Application, Graphics, Color, Container, Point, FederatedPointerEvent } from 'pixi.js';
 import { NoteBlock } from './NoteBlock';
 import logger from '../Logger';
 import { metronome, Metronome } from '../Metronome';
@@ -104,22 +104,46 @@ export class DanceTrack extends EventEmitter {
         });
         this.ghostBlock.graphics.alpha = 0.5;
         this.foregroundContainer.addChild(this.ghostBlock.graphics);
-        this.viewport.on("pointermove", (event) => {
-            if (!this.dragging && metronome.stopped) {
-                this.ghostBlock.graphics.visible = true;
-                let lane = Math.floor(event.screen.x / (this.app.screen.width / 4));
-                this.ghostBlock.graphics.x = this.laneToX(lane as Lane);
-                this.ghostBlock.graphics.y = this.alignYToBeat(this.screenYToForegroundY(event.screen.y), true);
-                this.ghostBlock.graphics.tint = LANE_COLORS[lane];
-            } else {
-                this.ghostBlock.graphics.visible = false;
-            }
+        this.viewport.on("pointermove", (event: FederatedPointerEvent) => {
+            this.updateGhostBlock(event);
+        });
+        this.viewport.on("pointerdown", (event: FederatedPointerEvent) => {
+            this.addBlock(event);
         });
     }
 
     private updateWhileDragging() {
         this.viewport.top = Math.max(0, this.viewport.top);
         metronome.setBeat(this.yToBeat(this.viewport.top, false));
+    }
+
+    private updateGhostBlock(event: FederatedPointerEvent) {
+            if (!this.dragging && metronome.stopped) {
+                this.ghostBlock.graphics.visible = true;
+                this.ghostBlock.lane = Math.floor(event.screen.x / (this.app.screen.width / 4)) as Lane;
+                this.ghostBlock.setBeat(this.yToBeat(this.screenYToForegroundY(event.screen.y), true));
+            } else {
+                this.ghostBlock.graphics.visible = false;
+            }
+    }
+
+    private addBlock(event: FederatedPointerEvent) {
+        if (!this.dragging && metronome.stopped) {
+            let newBlock = new NoteBlock({
+                beat: this.ghostBlock.beat,
+                subbeat: this.ghostBlock.subbeat,
+                lane: this.ghostBlock.lane,
+            })
+            let index = this.blocks.findIndex(block => {
+                return block.beat * Metronome.NUM_SUBBEATS + block.subbeat >= newBlock.beat * Metronome.NUM_SUBBEATS + newBlock.subbeat
+            })
+            if (index === -1) {
+                index = this.blocks.length;
+            }
+            this.blocksContainer.addChildAt(newBlock.graphics, index);
+            this.blocks.splice(index, 0, newBlock);
+            logger.debug(`Added block at beat ${newBlock.beat}, subbeat ${newBlock.subbeat}, lane ${newBlock.lane}`);
+        }
     }
 
     private snapViewportToSubbeat() {
@@ -133,11 +157,21 @@ export class DanceTrack extends EventEmitter {
 
     private createBlockTargets() {
         let lanes = [0, 1, 2, 3] as Lane[];
+        let width = this.app.screen.width / 4;
         lanes.forEach((lane: Lane) => {
-            let sprite = NoteBlock.createGraphic(lane, true);
-            sprite.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
-            sprite.x = this.laneToX(lane);
-            this.app.stage.addChild(sprite);
+            let target = new Graphics()
+            target.setStrokeStyle({width: 3, color: 0xFFFFFF, alpha: 0.5})
+                .moveTo(0, 0)
+                .lineTo(width, 0)
+                .moveTo(0, NoteBlock.HEIGHT)
+                .lineTo(width, NoteBlock.HEIGHT)
+                .stroke();
+            target.pivot.set(width / 2, NoteBlock.HEIGHT / 2);
+            target.label = `blockTarget-${lane}`;
+            target.tint = LANE_COLORS[lane];
+            target.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
+            target.x = this.laneToX(lane);
+            this.app.stage.addChild(target);
         })
     }
 
@@ -199,8 +233,6 @@ export class DanceTrack extends EventEmitter {
         this.blocks = noteblocks;
         this.blocks.forEach((block: NoteBlock) => {
             this.blocksContainer.addChild(block.graphics);
-            block.graphics.y = block.beat * this.distanceBetweenBeats + block.subbeat * this.distanceBetweenSubbeats;
-            block.graphics.x = this.laneToX(block.lane);
         });
     }
 
@@ -222,7 +254,7 @@ export class DanceTrack extends EventEmitter {
         return { beat, subbeat };
     }
 
-    private beatToY({ beat, subbeat }: Beat): number {
+    beatToY({ beat, subbeat }: Beat): number {
         return beat * this.distanceBetweenBeats + subbeat * this.distanceBetweenSubbeats;
     }
 
