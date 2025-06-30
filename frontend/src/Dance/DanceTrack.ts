@@ -1,4 +1,4 @@
-import { Application, Graphics, Color, Container } from 'pixi.js';
+import { Application, Graphics, Color, Container, Point } from 'pixi.js';
 import { NoteBlock } from './NoteBlock';
 import logger from '../Logger';
 import { metronome, Metronome } from '../Metronome';
@@ -6,6 +6,8 @@ import type { Beat } from '../Metronome';
 import type { Lane } from './Lane';
 import { Viewport } from "pixi-viewport";
 import { LightLane } from './LightLane';
+import { LANE_COLORS } from './LaneColors';
+import EventEmitter from 'eventemitter3';
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
@@ -13,20 +15,14 @@ import { LightLane } from './LightLane';
 // animation for pressing without a note
 // different colors for the 4 columns
 
+export type SnappingInterval = 1 | 2 | 4 | 8 | 16 | 32 | 64;
 
-
-
-export class DanceTrack {
+export class DanceTrack extends EventEmitter {
     static NUM_BEATS_BEFORE = 5;
     static NUM_BEATS_AFTER = 0.5;
     static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
-    static SNAP_SUBBEAT_RESOLUTION = 16;
-    static LANE_COLORS = [
-        "#FAD54B",
-        "#4AF97E",
-        "#4B58FA",
-        "#FA4D4B",
-    ]
+
+    #snappingInterval: SnappingInterval = 4;
 
     app: Application = new Application()
     blocks: NoteBlock[] = [];
@@ -36,11 +32,15 @@ export class DanceTrack {
     viewport!: Viewport;
     foregroundContainer: Container = new Container();
     blocksContainer: Container = new Container();
+    ghostBlock!: NoteBlock;
+
     distanceBetweenBeats: number = 0;
     distanceBetweenSubbeats: number = 0;
+
     dragging: boolean = false;
 
     constructor() {
+        super();
     }
 
     async setup() {
@@ -71,10 +71,12 @@ export class DanceTrack {
             worldHeight: this.app.screen.height,
             events: this.app.renderer.events,
         });
+        this.viewport.label = "viewport";
         this.app.stage.addChild(this.viewport);
-        this.viewport.drag({
-            direction: "y"
-        });
+        this.viewport
+            .drag({
+                direction: "y"
+            });
         this.foregroundContainer.label = "foreground";
         this.foregroundContainer.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
         this.viewport.addChild(this.foregroundContainer);
@@ -91,24 +93,38 @@ export class DanceTrack {
             this.snapViewportToSubbeat()
         });
         this.viewport.on("moved", () => this.updateWhileDragging());
+        this.ghostBlock = new NoteBlock({
+            beat: 0,
+            subbeat: 0,
+            lane: 0,
+        });
+        this.ghostBlock.graphics.alpha = 0;
+        this.foregroundContainer.addChild(this.ghostBlock.graphics);
+        this.viewport.on("pointermove", (event) => {
+            if (!this.dragging) {
+                this.ghostBlock.graphics.alpha = 0.5;
+                let lane = Math.floor(event.screen.x / (this.app.screen.width / 4));
+                this.ghostBlock.graphics.x = this.laneToX(lane as Lane);
+                this.ghostBlock.graphics.y = this.alignYToBeat(this.screenYToForegroundY(event.screen.y), true);
+                this.ghostBlock.graphics.tint = LANE_COLORS[lane];
+            } else {
+                this.ghostBlock.graphics.alpha = 0;
+            }
+        });
     }
 
     private updateWhileDragging() {
-        if (this.dragging) {
-            let subbeat = -1 * Math.round(this.viewport.y / this.distanceBetweenSubbeats);
-            metronome.setBeat(0, subbeat);
-        }
+        this.viewport.top = Math.max(0, this.viewport.top);
+        metronome.setBeat(this.yToBeat(this.viewport.top, false));
     }
 
     private snapViewportToSubbeat() {
-        let subbeat = -1 * Math.round(this.viewport.y / this.distanceBetweenSubbeats);
-        let snappingFactor = Metronome.NUM_SUBBEATS / DanceTrack.SNAP_SUBBEAT_RESOLUTION;
-        let snappedSubbeat = Math.round(subbeat / snappingFactor) * snappingFactor;
-        this.viewport.top = snappedSubbeat * this.distanceBetweenSubbeats;
-        logger.debug(`snapped to beat: ${Math.floor(snappedSubbeat / Metronome.NUM_SUBBEATS)}, subbeat ${snappedSubbeat % Metronome.NUM_SUBBEATS}`);
+        let { beat, subbeat } = this.yToBeat(this.viewport.top, true);
+        this.viewport.top = this.beatToY({ beat, subbeat });
+        logger.debug(`snapped to beat: ${beat}, subbeat ${subbeat}`);
 
         metronome.stop();
-        metronome.setBeat(0, snappedSubbeat);
+        metronome.setBeat({ beat, subbeat });
     }
 
     private createBlockTargets() {
@@ -184,8 +200,43 @@ export class DanceTrack {
         return this.app.screen.width / 8 * (lane * 2 + 1);
     }
 
-    update({ beat, subbeat }: Beat) {
-        this.viewport.top = beat * this.distanceBetweenBeats + subbeat * this.distanceBetweenSubbeats;
+    private screenYToForegroundY(y: number): number {
+        return Math.max(0, this.viewport.top + y - DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats);
+    }
+
+    private yToBeat(y: number, snapped = false): Beat {
+        let subbeat = Math.round(y / this.distanceBetweenSubbeats);
+        if (snapped) {
+            subbeat = Math.round(subbeat / this.snappingInterval) * this.snappingInterval;
+        }
+        let beat = Math.floor(subbeat / Metronome.NUM_SUBBEATS);
+        subbeat = subbeat % Metronome.NUM_SUBBEATS;
+        return { beat, subbeat };
+    }
+
+    private beatToY({ beat, subbeat }: Beat): number {
+        return beat * this.distanceBetweenBeats + subbeat * this.distanceBetweenSubbeats;
+    }
+
+    private alignYToBeat(y: number, snapped = false): number {
+        return this.beatToY(this.yToBeat(y, snapped));
+    }
+
+    update(beat: Beat) {
+        this.viewport.top = this.beatToY(beat);
+    }
+
+    get snappingInterval(): SnappingInterval {
+        return this.#snappingInterval;
+    }
+
+    set snappingInterval(value: SnappingInterval) {
+        if (![1, 2, 4, 8, 16, 32, 64].includes(value)) {
+            throw new Error(`Invalid snapping interval: ${value}`);
+        }
+        this.#snappingInterval = value;
+        logger.debug(`Snapping interval set to ${this.#snappingInterval}`);
+        this.emit("snappingIntervalChanged", this.#snappingInterval);
     }
 }
 

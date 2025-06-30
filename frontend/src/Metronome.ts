@@ -40,7 +40,7 @@ export class Metronome extends EventEmitter {
         this.#subbeat = value;
     }
 
-    setBeat(beat: number, subbeat: number) {
+    setBeat({beat, subbeat}: Beat) {
         let spilledBeats = Math.floor(subbeat / Metronome.NUM_SUBBEATS);
         subbeat = subbeat % Metronome.NUM_SUBBEATS;
         this.beat = beat + spilledBeats;
@@ -85,7 +85,7 @@ export class Metronome extends EventEmitter {
         return this.beatToMs(this.beat, this.subbeat);
     }
 
-    msToBeat(time: number): { beat: number, subbeat: number } {
+    msToBeat(time: number): Beat {
         let timeInSeconds = time / 1000
         let timeInMinutes = timeInSeconds / 60
         let localBeat = Math.floor(timeInMinutes * this.bpm)

@@ -2,6 +2,7 @@ import type { Lane } from './Lane';
 import { Graphics } from 'pixi.js';
 import { danceTrack, DanceTrack } from './DanceTrack';
 import logger from '../Logger';
+import { LANE_COLORS } from './LaneColors';
 
 export class LightLane {
     static MAX_ALPHA = 0.75;
@@ -19,7 +20,7 @@ export class LightLane {
         let width = danceTrack.app.screen.width / 4
         let height = danceTrack.app.screen.height
         this.graphics.label = `lightLane-${this.lane}`;
-        this.graphics.rect(this.lane * width, 0, width, height).fill({color: DanceTrack.LANE_COLORS[this.lane], alpha: 0})
+        this.graphics.rect(this.lane * width, 0, width, height).fill({color: LANE_COLORS[this.lane], alpha: 0})
 
     }
 
@@ -32,7 +33,7 @@ export class LightLane {
                 this.graphics.clear();
                 let width = danceTrack.app.screen.width / 4
                 let height = danceTrack.app.screen.height
-                this.graphics.rect(this.lane * width, 0, width, height).fill({color: DanceTrack.LANE_COLORS[this.lane], alpha: this.alpha});
+                this.graphics.rect(this.lane * width, 0, width, height).fill({color: LANE_COLORS[this.lane], alpha: this.alpha});
                 if (this.alpha <= 0) {
                     clearInterval(this.interval!);
                     this.interval = null;

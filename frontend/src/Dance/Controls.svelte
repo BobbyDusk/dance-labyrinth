@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { danceManager } from "./DanceManager";
+  import { danceTrack } from "./DanceTrack";
+  import type { SnappingInterval } from "./DanceTrack";
   import { Metronome, metronome } from "../Metronome";
 
   let paused = $state(true);
@@ -8,6 +10,7 @@
   let subbeat = $state(0);
   let time = $state(0);
   let bpm = $state(0);
+  let snappingInterval: SnappingInterval = $state(4);
 
   onMount(() => {
     metronome.on("beat", updateBeat);
@@ -66,6 +69,25 @@
     >
       Reset
     </button>
+  </div>
+  <div>
+    <label for="snappingInterval" class="text-lg"> Snapping Interval: </label>
+    <select
+      id="snappingInterval"
+      bind:value={snappingInterval}
+      class="w-16"
+      onchange={() => {
+        danceTrack.snappingInterval = snappingInterval;
+      }}
+    >
+      <option value={1}>1</option>
+      <option value={2}>2</option>
+      <option value={4}>4</option>
+      <option value={8}>8</option>
+      <option value={16}>16</option>
+      <option value={32}>32</option>
+      <option value={64}>64</option>
+    </select>
   </div>
   <div>
     <label for="scale" class="text-lg"> scale: </label>
