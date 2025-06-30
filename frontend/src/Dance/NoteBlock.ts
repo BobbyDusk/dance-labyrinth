@@ -5,6 +5,7 @@ import { LANE_COLORS } from "./LaneColors";
 import { Metronome } from "../Metronome";
 import type { Beat } from "../Metronome";
 import { danceTrack } from "./DanceTrack";
+import { metronome } from "../Metronome";
 
 
 export class NoteBlock {
@@ -79,6 +80,14 @@ export class NoteBlock {
         rect.setFillStyle({color: 0xFFFFFF}).rect(0, 0, width, NoteBlock.HEIGHT).fill()
         rect.pivot.set(width / 2, NoteBlock.HEIGHT / 2);
         rect.cullable = true;
+        rect.eventMode = "static";
+        rect.cursor = 'url(delete-cursor.png), pointer';
+        rect.on("mousedown", (event) => {
+            if (!danceTrack.dragging && metronome.stopped) {
+                danceTrack.removeBlock(this);
+                event.stopPropagation();
+            }
+        });
         return rect;
     }
 

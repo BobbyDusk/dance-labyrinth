@@ -79,8 +79,10 @@ export class DanceTrack extends EventEmitter {
         this.app.stage.addChild(this.viewport);
         this.viewport
             .drag({
-                direction: "y"
+                direction: "y",
+                mouseButtons: "right",
             });
+        this.viewport.options.disableOnContextMenu = true;
         this.foregroundContainer.label = "foreground";
         this.foregroundContainer.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
         this.viewport.addChild(this.foregroundContainer);
@@ -103,13 +105,18 @@ export class DanceTrack extends EventEmitter {
             lane: 0,
         });
         this.ghostBlock.graphics.alpha = 0.5;
+        this.ghostBlock.graphics.cursor = 'url(add-cursor.png), pointer';
+        this.ghostBlock.graphics.zIndex = -1;
+        this.ghostBlock.graphics.off("mousedown");
         this.foregroundContainer.addChild(this.ghostBlock.graphics);
         this.viewport.on("pointermove", (event: FederatedPointerEvent) => {
             this.updateGhostBlock(event);
         });
-        this.viewport.on("pointerdown", (event: FederatedPointerEvent) => {
-            this.addBlock(event);
+        this.viewport.cursor = 'url(add-cursor.png), pointer';
+        this.viewport.on("mousedown", (event: FederatedPointerEvent) => {
+            this.addBlockAtGhostLocation();
         });
+
     }
 
     private updateWhileDragging() {
@@ -127,8 +134,15 @@ export class DanceTrack extends EventEmitter {
             }
     }
 
-    private addBlock(event: FederatedPointerEvent) {
+    private addBlockAtGhostLocation() {
         if (!this.dragging && metronome.stopped) {
+            let doesBlockExist = this.blocks.some(block => {
+                return block.beat === this.ghostBlock.beat && block.subbeat === this.ghostBlock.subbeat && block.lane === this.ghostBlock.lane;
+            });
+            if (doesBlockExist) {
+                logger.debug(`Tried to add block that already exists at beat ${this.ghostBlock.beat}, subbeat ${this.ghostBlock.subbeat}, lane ${this.ghostBlock.lane}`);
+                return;
+            }
             let newBlock = new NoteBlock({
                 beat: this.ghostBlock.beat,
                 subbeat: this.ghostBlock.subbeat,
@@ -144,6 +158,18 @@ export class DanceTrack extends EventEmitter {
             this.blocks.splice(index, 0, newBlock);
             logger.debug(`Added block at beat ${newBlock.beat}, subbeat ${newBlock.subbeat}, lane ${newBlock.lane}`);
         }
+    }
+
+    removeBlock(block: NoteBlock) {
+        let index = this.blocks.indexOf(block);
+        if (index !== -1) {
+            this.blocks.splice(index, 1);
+            this.blocksContainer.removeChild(block.graphics);
+            logger.debug(`Removed block at beat ${block.beat}, subbeat ${block.subbeat}, lane ${block.lane}`);
+        } else {
+            logger.warn(`Tried to remove block that does not exist: ${block}`);
+        }
+        block.destruct();
     }
 
     private snapViewportToSubbeat() {

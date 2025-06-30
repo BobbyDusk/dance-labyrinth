@@ -85,40 +85,6 @@ export class DanceManager {
             // danceTrack.showPressFeedback(PressQuality.Miss, lane);
             logger.info(`Missed press in lane ${lane}`);
         }
-
-        /*
-        let pressTime = Date.now() - Beat.startTime
-        let smallestTimeDifference = Infinity
-        let indexArrow = -1
-        for (let i = 0; i < this.arrowsQueue.length; i++) {
-            let arrow = this.arrowsQueue[i]
-            if( arrow.direction == direction) {
-                let timeArrow = Beat.beatToMs(arrow.beat, arrow.subbeat)
-                let timeDifference = Math.abs(pressTime - timeArrow)
-                if (timeDifference < smallestTimeDifference) {
-                    smallestTimeDifference = timeDifference
-                    indexArrow = i
-                } else if (indexArrow != -1) {
-                    // since the arrows are sorted by time, we can break here
-                    break
-                }
-            }
-        }
-        if (indexArrow != -1 && smallestTimeDifference < this.timeOffsetOk) {
-            let arrow = this.arrowsQueue[indexArrow]
-            arrow.destruct()
-            this.arrowsQueue.splice(indexArrow, 1)
-            if (smallestTimeDifference < this.timeOffsetPerfect) { this.showPressFeedback(PressQuality.Perfect)
-            } else if (smallestTimeDifference < this.timeOffsetGreat) {
-                this.showPressFeedback(PressQuality.Great)
-            } else if (smallestTimeDifference < this.timeOffsetGood) {
-                this.showPressFeedback(PressQuality.Good)
-            } else {
-                this.showPressFeedback(PressQuality.Ok)
-            }
-            logger.info(`Hit ${arrow.toString()}`)
-        }
-            */
     }
 
     private updateBlockIndex({ beat, subbeat }: Beat) {
@@ -161,65 +127,6 @@ export class DanceManager {
     private updateOnBeat(beat: Beat) {
         danceTrack.update(beat);
     }
-
-
-    /*
-    async loop(ticker: Ticker) {
-        // add arrows to queue
-        while (!noMoreNotes) {
-            let [noteBeat, noteSubbeat, noteDirection] = song.notes[noteIndex]
-
-            // if note is on field, add to queue
-            if (noteBeat * 100 + noteSubbeat < (Beat.beat + beatsVisible) * 100 + Beat.subbeat) {
-                let arrow = new Arrow({
-                    beat: noteBeat,
-                    subbeat: noteSubbeat,
-                    direction: noteDirection,
-                })
-                arrowsQueue.push(arrow)
-                logger.info(`added arrow: ${arrow.toString()}`)
-                noteIndex++
-                if (noteIndex == song.notes.length) {
-                    noMoreNotes = true
-                    logger.info("No more notes to add.")
-                }
-            } else {
-                break
-            }
-        }
-
-        // remove arrows from queue
-        for (let i = 0; i < arrowsQueue.length; i++) {
-            let arrow = arrowsQueue[i]
-            if (arrow.beat * 100 + arrow.subbeat < (Beat.beat - 1) * 100 + Beat.subbeat) {
-                let removedArrow = arrowsQueue.shift()
-                removedArrow?.destruct()
-                logger.info(`removed arrow: ${removedArrow?.toString()}`)
-            } else {
-                break
-            }
-        }
-
-        // check if song ended
-        if (noMoreNotes && arrowsQueue.length == 0) {
-            // songEnded = true
-            logger.info("Song ended.")
-            if (autoReset) {
-                reset()
-            }
-        }
-
-
-        // update placement arrows
-        arrowsQueue.forEach(arrow => {
-            let distanceBetweenSubbeats = (global.app.screen.height - marginTop) / (beatsVisible * Beat.NUM_SUBBEATS)
-            let lineNumber = (arrow.beat - Beat.beat) * Beat.NUM_SUBBEATS + (arrow.subbeat - Beat.subbeat)
-            arrow.sprite.y = marginTop + lineNumber * distanceBetweenSubbeats
-        })
-
-        updateInfo(ticker);
-    }
-    */
 }
 
 export const danceManager = new DanceManager();
