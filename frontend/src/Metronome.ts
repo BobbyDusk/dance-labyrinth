@@ -11,7 +11,7 @@ export class Metronome extends EventEmitter {
     private interval: ReturnType<typeof setInterval> | null = null;
     stopped = true;
 
-    bpm = 0;
+    #bpm = 120;
     #beat = 0;
     #subbeat = 0;
 
@@ -27,6 +27,10 @@ export class Metronome extends EventEmitter {
         return this.#subbeat;
     }
 
+    get bpm(): number {
+        return this.#bpm;
+    }
+
     private set beat(value: number) {
         if (value < 0) {
             throw new Error("Beat cannot be negative");
@@ -39,6 +43,19 @@ export class Metronome extends EventEmitter {
             throw new Error(`Subbeat must be between 0 and ${Metronome.NUM_SUBBEATS - 1}`);
         }
         this.#subbeat = value;
+    }
+
+    set bpm(value: number) {
+        if (value < 10) {
+            throw new Error("BPM must be a number greater than or equal to 10");
+        }
+        this.#bpm = value;
+        logger.debug(`Metronome BPM set to ${this.bpm}`);
+        this.emit("bpmChanged", this.bpm);
+        if (!this.stopped) {
+            this.stop();
+            this.start();
+        }
     }
 
     setBeat({beat, subbeat}: Beat) {

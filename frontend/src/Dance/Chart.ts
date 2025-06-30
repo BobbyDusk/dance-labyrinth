@@ -1,6 +1,7 @@
 import type { Lane } from "./Lane";
 import EventEmitter from 'eventemitter3';
 import logger from "../Logger";
+import { metronome } from "../Metronome";
 
 export interface Note {
     beat: number;
@@ -21,7 +22,7 @@ export class Chart extends EventEmitter {
 
     constructor() {
         super();
-        this.bpm = 120;
+        this.bpm = metronome.bpm;
         this.notes = [];
         this.songUrl = "";
     }
@@ -72,6 +73,7 @@ export class Chart extends EventEmitter {
     saveToLocalStorage(): void {
         try {
             localStorage.setItem("dancetopia-chart", this.jsonString);
+            logger.debug("Chart saved to local storage.");
         } catch (error) {
             throw new Error("Failed to save chart to local storage.");
         }
@@ -79,6 +81,7 @@ export class Chart extends EventEmitter {
 
     saveToFile(): File {
         const blob = new Blob([this.jsonString], { type: 'application/json' });
-        return new File([blob], "chart.json", { type: 'application/json' });
+        let file = new File([blob], "chart.json", { type: 'application/json' });
+        return file;
     }
 }

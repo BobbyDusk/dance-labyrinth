@@ -4,6 +4,7 @@
   import { danceTrack } from "./DanceTrack";
   import type { SnappingInterval } from "./DanceTrack";
   import { Metronome, metronome } from "../Metronome";
+  import logger from "../Logger";
 
   let paused = $state(true);
   let beat = $state(0);
@@ -19,6 +20,9 @@
     });
     metronome.on("stopped", () => {
       paused = true;
+    });
+    metronome.on("bpmChanged", (newBpm) => {
+      bpm = newBpm;
     });
     danceManager.chart.on("loaded", (chart) => {
       bpm = chart.bpm;

@@ -142,6 +142,7 @@ export class DanceManager {
     async loadChart(file: File): Promise<void> {
         await this.chart.loadFromFile(file);
         this.updateFromChart();
+        this.chart.saveToLocalStorage();
     }
 
     saveChart(): File {

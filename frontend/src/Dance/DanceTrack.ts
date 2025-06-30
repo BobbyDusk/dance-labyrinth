@@ -276,7 +276,6 @@ export class DanceTrack extends EventEmitter {
         this.blocks.forEach((block: NoteBlock) => {
             this.blocksContainer.addChild(block.graphics);
         });
-        danceManager.updateChart();
         logger.debug(`Set ${this.blocks.length} blocks`);
     }
 
