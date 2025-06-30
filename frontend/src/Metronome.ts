@@ -9,6 +9,7 @@ export interface Beat {
 export class Metronome extends EventEmitter {
     static NUM_SUBBEATS = 64;
     private interval: ReturnType<typeof setInterval> | null = null;
+    stopped = true;
 
     bpm = 0;
     #beat = 0;
@@ -52,6 +53,7 @@ export class Metronome extends EventEmitter {
         logger.debug("Starting metronome.")
         this.emit("started");
         this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
+        this.stopped = false;
         this.interval = setInterval(() => {
             this.updateBeat();
         }, this.msBetweenSubbeats);
@@ -60,6 +62,7 @@ export class Metronome extends EventEmitter {
     stop() {
         logger.debug("Stopping metronome.")
         this.emit("stopped");
+        this.stopped = true;
         if (this.interval) {
             clearInterval(this.interval);
         }

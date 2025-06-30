@@ -59,6 +59,10 @@ export class DanceTrack extends EventEmitter {
         this.createLines();
         this.createBlockTargets();
         this.setupLightLanes();
+
+        metronome.on("started", () => {
+            this.ghostBlock.graphics.visible = false;
+        })
     }
 
     private setupStructure() {
@@ -98,17 +102,17 @@ export class DanceTrack extends EventEmitter {
             subbeat: 0,
             lane: 0,
         });
-        this.ghostBlock.graphics.alpha = 0;
+        this.ghostBlock.graphics.alpha = 0.5;
         this.foregroundContainer.addChild(this.ghostBlock.graphics);
         this.viewport.on("pointermove", (event) => {
-            if (!this.dragging) {
-                this.ghostBlock.graphics.alpha = 0.5;
+            if (!this.dragging && metronome.stopped) {
+                this.ghostBlock.graphics.visible = true;
                 let lane = Math.floor(event.screen.x / (this.app.screen.width / 4));
                 this.ghostBlock.graphics.x = this.laneToX(lane as Lane);
                 this.ghostBlock.graphics.y = this.alignYToBeat(this.screenYToForegroundY(event.screen.y), true);
                 this.ghostBlock.graphics.tint = LANE_COLORS[lane];
             } else {
-                this.ghostBlock.graphics.alpha = 0;
+                this.ghostBlock.graphics.visible = false;
             }
         });
     }
@@ -174,12 +178,16 @@ export class DanceTrack extends EventEmitter {
         }
     }
 
-    reset() {
-        logger.debug("Resetting DanceTrack")
+    resetBlocks() {
+        logger.debug("Resetting Blocks")
         this.blocks.forEach(block => {
             block.graphics.visible = true;
         });
-        this.viewport.y = 0;
+    }
+
+    resetPosition() {
+        logger.debug("Resetting position")
+        this.viewport.top = 0;
     }
 
     lightUpLane(lane: Lane) {

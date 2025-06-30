@@ -53,18 +53,24 @@ export class DanceManager {
     pause() {
         this.paused = true;
         this.song!.pause();
+        this.resetBlocks();
         metronome.stop();
     }
 
     reset() {
         this.started = false;
-        this.blockIndex = 0
         this.song!.stop();
-        danceTrack.reset();
+        this.resetBlocks();
+        danceTrack.resetPosition();
         metronome.reset();
         this.pause();
     }
 
+    resetBlocks() {
+        logger.debug("Resetting blocks");
+        this.blockIndex = 0;
+        danceTrack.resetBlocks();
+    }
 
     press(lane: Lane) {
         logger.info(`Pressed ${lane} at beat ${metronome.beat}, subbeat ${metronome.subbeat}`);
