@@ -127,7 +127,6 @@ export class DanceTrack extends EventEmitter {
         this.viewport.on("mousedown", (event: FederatedPointerEvent) => {
             this.addBlockAtGhostLocation();
         });
-
     }
 
     private updateWhileDragging() {

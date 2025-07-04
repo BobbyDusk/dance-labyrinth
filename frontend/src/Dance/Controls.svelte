@@ -5,6 +5,9 @@
   import type { SnappingInterval } from "./DanceTrack";
   import { Metronome, metronome } from "../Metronome";
   import logger from "../Logger";
+  import Button from "../Button.svelte";
+  import { audioVisualizer } from "./AudioVisualizer";
+  import delay from "delay";
 
   let paused = $state(true);
   let beat = $state(0);
@@ -48,7 +51,7 @@
   }
 </script>
 
-<div>
+<div class="flex flex-col gap-4 p-4">
   <div>
     <p>bpm: {bpm}</p>
     <p>
@@ -59,24 +62,17 @@
     <p>time: {new Date(time).toISOString().substring(14, 23)}</p>
   </div>
   <div>
-    <button
-      class="bg-blue-500 text-white px-4 py-2 rounded w-24 cursor-pointer"
-      onclick={togglePlayPause}
-    >
+    <Button onclick={togglePlayPause}>
       {#if paused}
         Start
       {:else}
         Pause
       {/if}
-    </button>
-    <button
-      class="bg-blue-500 text-white px-4 py-2 rounded w-24 cursor-pointer"
-      onclick={reset}
-    >
-      Reset
-    </button>
-    <button
-      class="bg-blue-500 text-white px-4 py-2 rounded w-36 cursor-pointer"
+    </Button>
+    <Button onclick={reset}>Reset</Button>
+  </div>
+  <div>
+    <Button
       onclick={() => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -88,10 +84,9 @@
           }
         };
         fileInput.click();
-      }}>Load Chart</button
+      }}>Load Chart</Button
     >
-    <button
-      class="bg-blue-500 text-white px-4 py-2 rounded w-36 cursor-pointer"
+    <Button
       onclick={() => {
         let file = danceManager.saveChart();
         const url = URL.createObjectURL(file);
@@ -104,7 +99,27 @@
       }}
     >
       Save Chart
-    </button>
+    </Button>
+  </div>
+  <div>
+    <Button>New Chart</Button>
+    <Button onclick={() => {
+        const input = document.createElement("input");
+        input.style.display = "none";
+        input.type = "file";
+        input.accept = ".mp3,.wav,.ogg";
+        input.onchange = (event) => {
+          const target = event.target as HTMLInputElement;
+          if (target.files && target.files.length > 0) {
+            audioVisualizer.loadFile(target.files[0]).then(async () => {
+              await delay(1000); // Wait for the waveform to be ready
+              logger.debug(audioVisualizer.waveformCanvas);
+              logger.debug(audioVisualizer.spectrogramCanvas);
+            });
+          }
+        };
+        input.click();
+    }}>Load Song</Button>
   </div>
   <div>
     <label for="snappingInterval" class="text-lg"> Snapping Interval: </label>
@@ -125,6 +140,7 @@
       <option value={64}>64</option>
     </select>
   </div>
+  <!--
   <div>
     <label for="scale" class="text-lg"> scale: </label>
     <input
@@ -136,4 +152,5 @@
       class="w-64"
     />
   </div>
+  -->
 </div>
