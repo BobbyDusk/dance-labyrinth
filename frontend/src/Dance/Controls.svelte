@@ -7,6 +7,7 @@
   import logger from "../Logger";
   import Button from "../Button.svelte";
   import { audioVisualizer } from "./AudioVisualizer";
+  import { beatDetector } from "./BeatDetector";
   import delay from "delay";
 
   let paused = $state(true);
@@ -53,6 +54,7 @@
 
 <div class="flex flex-col gap-4 p-4">
   <div>
+    <p>offset: </p>
     <p>bpm: {bpm}</p>
     <p>
       beat: <span class="inline-block w-8 text-end">{beat}</span>
@@ -115,6 +117,10 @@
               await delay(1000); // Wait for the waveform to be ready
               logger.debug(audioVisualizer.waveformCanvas);
               logger.debug(audioVisualizer.spectrogramCanvas);
+              danceTrack.setWaveformBackground();
+            });
+            beatDetector.loadFile(target.files[0]).then(() => {
+              logger.debug(`BPM: ${beatDetector.bpm}, Offset: ${beatDetector.offset}`);
             });
           }
         };

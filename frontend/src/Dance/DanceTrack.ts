@@ -1,4 +1,4 @@
-import { Application, Graphics, Color, Container, Point, FederatedPointerEvent } from 'pixi.js';
+import { Application, Graphics, Color, Container, Point, FederatedPointerEvent, Texture, Sprite } from 'pixi.js';
 import { NoteBlock } from './NoteBlock';
 import logger from '../Logger';
 import { metronome, Metronome } from '../Metronome';
@@ -9,6 +9,7 @@ import { LightLane } from './LightLane';
 import { LANE_COLORS } from './LaneColors';
 import EventEmitter from 'eventemitter3';
 import { danceManager } from './DanceManager';
+import { audioVisualizer } from './AudioVisualizer';
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
@@ -114,7 +115,7 @@ export class DanceTrack extends EventEmitter {
             beat: 0,
             subbeat: 0,
             lane: 0,
-        });
+        })
         this.ghostBlock.graphics.alpha = 0.5;
         this.ghostBlock.graphics.cursor = 'url(add-cursor.png), pointer';
         this.ghostBlock.graphics.zIndex = -1;
@@ -276,6 +277,16 @@ export class DanceTrack extends EventEmitter {
             this.blocksContainer.addChild(block.graphics);
         });
         logger.debug(`Set ${this.blocks.length} blocks`);
+    }
+
+    setWaveformBackground() {
+        const texture = Texture.from(audioVisualizer.waveformCanvas);
+        const sprite = new Sprite(texture);
+        sprite.rotation = Math.PI / 2;
+        sprite.label = "waveformBackground";
+        sprite.zIndex = -1;
+        sprite.x = this.app.screen.width;
+        this.foregroundContainer.addChild(sprite);
     }
 
     laneToX(lane: Lane): number {

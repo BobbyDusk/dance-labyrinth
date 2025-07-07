@@ -13,24 +13,25 @@ export interface ChartObject {
     bpm: number;
     notes: Note[];
     songUrl: string;
+    offset: number;
 }
 
 export class Chart extends EventEmitter {
     bpm: number;
-    notes: Note[];
-    songUrl: string;
+    notes: Note[] = [];
+    songUrl: string = "";
+    offset: number = 0;
 
     constructor() {
         super();
         this.bpm = metronome.bpm;
-        this.notes = [];
-        this.songUrl = "";
     }
 
     load(chart: ChartObject) {
         this.bpm = chart.bpm;
         this.notes = chart.notes;
         this.songUrl = chart.songUrl;
+        this.offset = chart.offset;
         this.emit("loaded", chart);
     }
 
@@ -64,7 +65,8 @@ export class Chart extends EventEmitter {
         const chartObject: ChartObject = {
             bpm: this.bpm,
             notes: this.notes,
-            songUrl: this.songUrl
+            songUrl: this.songUrl,
+            offset: this.offset
         };
         return JSON.stringify(chartObject, null, 2);
 
