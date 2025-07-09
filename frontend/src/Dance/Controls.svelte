@@ -110,18 +110,10 @@
         input.style.display = "none";
         input.type = "file";
         input.accept = ".mp3,.wav,.ogg";
-        input.onchange = (event) => {
+        input.onchange = async (event) => {
           const target = event.target as HTMLInputElement;
           if (target.files && target.files.length > 0) {
-            audioVisualizer.loadFile(target.files[0]).then(async () => {
-              await delay(1000); // Wait for the waveform to be ready
-              logger.debug(audioVisualizer.waveformCanvas);
-              logger.debug(audioVisualizer.spectrogramCanvas);
-              danceTrack.setWaveformBackground();
-            });
-            beatDetector.loadFile(target.files[0]).then(() => {
-              logger.debug(`BPM: ${beatDetector.bpm}, Offset: ${beatDetector.offset}`);
-            });
+            danceManager.loadSong(target.files[0]);
           }
         };
         input.click();

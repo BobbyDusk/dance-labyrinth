@@ -5,7 +5,9 @@ import type { Lane } from "./Lane";
 import { metronome } from "../Metronome";
 import type { Beat } from "../Metronome";
 import { Chart } from "./Chart";
-import { Howl } from "howler";
+import { beatDetector } from "./BeatDetector";
+import { audioVisualizer } from "./AudioVisualizer";
+import { song } from "./Song";
 
 enum PressQuality {
     Perfect = "Perfect",
@@ -25,9 +27,8 @@ export class DanceManager {
     blockIndex = 0
     started: boolean = false;
     paused: boolean = true;
-    song: Howl | null = null;
 
-    constructor() {}
+    constructor() { }
 
     async setup() {
         try {
@@ -35,10 +36,7 @@ export class DanceManager {
         } catch (error) {
             logger.debug("Failed to load chart from local storage, loading default chart.");
         }
-        this.song = new Howl({
-            src: [this.chart.songUrl],
-            autoplay: false,
-        });
+        song.loadURL(this.chart.songUrl);
         await danceTrack.setup();
         this.updateFromChart();
         metronome.on("beat", this.updateOnBeat);
@@ -47,20 +45,20 @@ export class DanceManager {
     start() {
         this.started = true;
         this.paused = false;
-        this.song!.play();
+        song.play();
         metronome.start();
     }
 
     pause() {
         this.paused = true;
-        this.song!.pause();
+        song.pause();
         this.resetBlocks();
         metronome.stop();
     }
 
     reset() {
         this.started = false;
-        this.song!.stop();
+        song.stop();
         this.resetBlocks();
         danceTrack.resetPosition();
         metronome.reset();
@@ -76,8 +74,8 @@ export class DanceManager {
     press(lane: Lane) {
         logger.info(`Pressed ${lane} at beat ${metronome.beat}, subbeat ${metronome.subbeat}`);
         danceTrack.lightUpLane(lane)
-        this.updateBlockIndex({beat: metronome.beat, subbeat: metronome.subbeat});
-        let {pressQuality, block} = this.checkBlockHit(lane, metronome.beat, metronome.subbeat);
+        this.updateBlockIndex({ beat: metronome.beat, subbeat: metronome.subbeat });
+        let { pressQuality, block } = this.checkBlockHit(lane, metronome.beat, metronome.subbeat);
         if (block) {
             block.graphics.visible = false;
             // danceTrack.showPressFeedback(pressQuality, lane);
@@ -86,6 +84,16 @@ export class DanceManager {
             // danceTrack.showPressFeedback(PressQuality.Miss, lane);
             logger.info(`Missed press in lane ${lane}`);
         }
+    }
+
+    async loadSong(file: File) {
+        song.loadFile(file);
+        let detected = await beatDetector.loadFile(file);
+        if (detected) {
+            metronome.bpm = detected.bpm;
+        }
+        await audioVisualizer.loadFile(file)
+        danceTrack.setWaveformBackground();
     }
 
     private updateBlockIndex({ beat, subbeat }: Beat) {
@@ -100,24 +108,24 @@ export class DanceManager {
         }
     }
 
-    private checkBlockHit(lane: Lane, beat: number, subbeat: number): {pressQuality: PressQuality, block: NoteBlock | null} {
+    private checkBlockHit(lane: Lane, beat: number, subbeat: number): { pressQuality: PressQuality, block: NoteBlock | null } {
         let index = this.blockIndex;
         let pressTime = metronome.beatToMs(beat, subbeat);
-        while(true){
+        while (true) {
             if (index >= danceTrack.blocks.length) {
-                return {pressQuality: PressQuality.Miss, block: null};
+                return { pressQuality: PressQuality.Miss, block: null };
             }
             let block = danceTrack.blocks[index];
             if (block.lane == lane && block.graphics.visible) {
                 let timeBlock = metronome.beatToMs(block.beat, block.subbeat);
                 if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_PERFECT) {
-                    return {pressQuality: PressQuality.Perfect, block: block};
+                    return { pressQuality: PressQuality.Perfect, block: block };
                 } else if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_GREAT) {
-                    return {pressQuality: PressQuality.Great, block: block};
+                    return { pressQuality: PressQuality.Great, block: block };
                 } else if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_GOOD) {
-                    return {pressQuality: PressQuality.Good, block: block};
+                    return { pressQuality: PressQuality.Good, block: block };
                 } else if (Math.abs(pressTime - timeBlock) < DanceManager.TIME_OFFSET_OK) {
-                    return {pressQuality: PressQuality.Ok, block: block};
+                    return { pressQuality: PressQuality.Ok, block: block };
                 }
             }
             index++;

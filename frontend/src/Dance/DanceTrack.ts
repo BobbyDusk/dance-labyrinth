@@ -9,7 +9,7 @@ import { LightLane } from './LightLane';
 import { LANE_COLORS } from './LaneColors';
 import EventEmitter from 'eventemitter3';
 import { danceManager } from './DanceManager';
-import { audioVisualizer } from './AudioVisualizer';
+import { AudioVisualizer, audioVisualizer } from './AudioVisualizer';
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
@@ -34,6 +34,8 @@ export class DanceTrack extends EventEmitter {
     viewport!: Viewport;
     foregroundContainer: Container = new Container();
     blocksContainer: Container = new Container();
+    waveformContainer: Container = new Container();
+    spectrogramContainer: Container = new Container();
     ghostBlock!: NoteBlock;
 
     distanceBetweenBeats: number = 0;
@@ -92,6 +94,12 @@ export class DanceTrack extends EventEmitter {
         this.viewport.addChild(this.foregroundContainer);
         this.blocksContainer.label = "blocks";
         this.foregroundContainer.addChild(this.blocksContainer);
+        this.waveformContainer.label = "waveform";
+        this.waveformContainer.zIndex = -10
+        this.foregroundContainer.addChild(this.waveformContainer);
+        this.spectrogramContainer.label = "spectrogram";
+        this.spectrogramContainer.zIndex = -10;
+        this.foregroundContainer.addChild(this.spectrogramContainer);
         this.viewport.on("drag-start", () => {
             logger.debug(`viewport drag started`);
             this.dragging = true;
@@ -280,13 +288,13 @@ export class DanceTrack extends EventEmitter {
     }
 
     setWaveformBackground() {
-        const texture = Texture.from(audioVisualizer.waveformCanvas);
-        const sprite = new Sprite(texture);
-        sprite.rotation = Math.PI / 2;
-        sprite.label = "waveformBackground";
-        sprite.zIndex = -1;
-        sprite.x = this.app.screen.width;
-        this.foregroundContainer.addChild(sprite);
+        for (const [index, canvas] of audioVisualizer.waveformCanvases.entries()) {
+            const texture = Texture.from(canvas);
+            const sprite = new Sprite(texture);
+            sprite.label = "waveformBackground";
+            sprite.y = index * AudioVisualizer.CANVAS_LENGTH;
+            this.spectrogramContainer.addChild(sprite);
+        }
     }
 
     laneToX(lane: Lane): number {
