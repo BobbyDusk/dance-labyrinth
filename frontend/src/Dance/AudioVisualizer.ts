@@ -48,12 +48,12 @@ export class AudioVisualizer {
             return;
         }
 
-        // Clear previous canvases
         for (const canvas of this.waveformCanvases) {
             canvas.remove();
         }
         this.waveformContainer.innerHTML = '';
         this.waveformCanvases = [];
+        this.waveformData = [];
 
         let numberOfCanvases = Math.ceil(this.getVisualizationLength() / AudioVisualizer.CANVAS_LENGTH);
         for (let i = 0; i < numberOfCanvases; i++) {
@@ -65,9 +65,11 @@ export class AudioVisualizer {
         }
 
         const channelData = this.audioBuffer.getChannelData(0);
-        const samplesPerPixel = Math.ceil(channelData.length / this.getVisualizationLength());
+        const samplesPerPixel = channelData.length / this.getVisualizationLength();
         for (let j = 0; j < channelData.length; j += samplesPerPixel) {
-            const sample = channelData.slice(j, j + samplesPerPixel);
+            let startIndex = Math.floor(j);
+            let endIndex = Math.floor(j + samplesPerPixel);
+            const sample = channelData.slice(startIndex, endIndex);
             const maxSample = Math.max(...sample);
             const minSample = Math.min(...sample);
             this.waveformData.push({ max: maxSample, min: minSample });
@@ -100,15 +102,12 @@ export class AudioVisualizer {
             ctx.stroke();
             ctx.fill();
         }
+        logger.debug(`Should be: ${this.getVisualizationLength()}`);
+        logger.debug(`Is: ${this.waveformData.length}`);
     }
 
-    loadUrl(url: string) {
-        // TODO: Implement loading from URL
-    }
-
-    async loadFile(file: File) {
-        let arrayBuffer = await file.arrayBuffer();
-        this.audioBuffer = await new AudioContext().decodeAudioData(arrayBuffer);
+    async load(audioBuffer: AudioBuffer) {
+        this.audioBuffer = audioBuffer;
         this.createVisualizations();
     }
 }

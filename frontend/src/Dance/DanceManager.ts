@@ -8,6 +8,7 @@ import { Chart } from "./Chart";
 import { beatDetector } from "./BeatDetector";
 import { audioVisualizer } from "./AudioVisualizer";
 import { song } from "./Song";
+import { addSilenceToAudio, audioBufferToBase64Url } from "./audio";
 
 enum PressQuality {
     Perfect = "Perfect",
@@ -36,7 +37,6 @@ export class DanceManager {
         } catch (error) {
             logger.debug("Failed to load chart from local storage, loading default chart.");
         }
-        song.loadURL(this.chart.songUrl);
         await danceTrack.setup();
         this.updateFromChart();
         metronome.on("beat", this.updateOnBeat);
@@ -71,6 +71,13 @@ export class DanceManager {
         danceTrack.resetBlocks();
     }
 
+    createChart() {
+        logger.debug("Creating new chart");
+        this.chart = new Chart();
+        this.updateFromChart();
+        this.updateChart();
+    }
+
     press(lane: Lane) {
         logger.info(`Pressed ${lane} at beat ${metronome.beat}, subbeat ${metronome.subbeat}`);
         danceTrack.lightUpLane(lane)
@@ -87,12 +94,18 @@ export class DanceManager {
     }
 
     async loadSong(file: File) {
-        song.loadFile(file);
-        let detected = await beatDetector.loadFile(file);
+        const arrayBuffer = await file.arrayBuffer();
+        const audioContext = new AudioContext();
+        let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        let detected = await beatDetector.load(audioBuffer);
         if (detected) {
             metronome.bpm = detected.bpm;
+            let silenceDuration = metronome.msBetweenBeats / 1000 - detected.offset;
+            audioBuffer = addSilenceToAudio(audioBuffer, silenceDuration);
         }
-        await audioVisualizer.loadFile(file)
+        let audioBase64 = await audioBufferToBase64Url(audioBuffer);
+        song.load(audioBase64);
+        await audioVisualizer.load(audioBuffer);
         danceTrack.setWaveformBackground();
     }
 

@@ -7,30 +7,11 @@ export class Song {
     constructor() {
     }
 
-    loadURL(url: string): void {
-        logger.debug(`Loading song from URL: ${url}`);
+    load(url: string): void {
+        logger.debug(`Loading song`);
         this.howl = new Howl({
             src: [url],
             autoplay: false,
-        });
-    }
-
-    loadFile(file: File): Promise<void> {
-        logger.debug(`Loading song from file: ${file.name}`);
-        return new Promise((resolve, reject) => {
-            let reader = new FileReader();
-            reader.onload = () => {
-                this.howl = new Howl({
-                    src: [reader.result as string],
-                    autoplay: false,
-                });
-                resolve();
-            };
-            reader.onerror = () => {
-                logger.error(`Error loading file: ${file.name}`);
-                reject();
-            };
-            reader.readAsDataURL(file);
         });
     }
 

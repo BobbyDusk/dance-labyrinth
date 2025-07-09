@@ -29,7 +29,6 @@
     "pino": "^9.7.0",
     "pixi-viewport": "^6.0.3",
     "pixi.js": "^8.10.2",
-    "waveform-data": "^4.5.2",
     "web-audio-beat-detector": "^8.2.29"
   }
 }

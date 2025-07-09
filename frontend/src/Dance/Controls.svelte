@@ -11,6 +11,7 @@
   import delay from "delay";
 
   let paused = $state(true);
+  let offset = $state(0);
   let beat = $state(0);
   let subbeat = $state(0);
   let time = $state(0);
@@ -55,7 +56,20 @@
 <div class="flex flex-col gap-4 p-4">
   <div>
     <p>offset: </p>
-    <p>bpm: {bpm}</p>
+    <label for="bpm">bpm: </label>
+    <input
+      type="number"
+      id="bpm"
+      bind:value={bpm}
+      min="1"
+      max="300"
+      class="w-16"
+      onchange={() => {
+        metronome.bpm = bpm;
+        danceManager.chart.bpm = bpm;
+        danceManager.updateChart();
+      }}
+    />
     <p>
       beat: <span class="inline-block w-8 text-end">{beat}</span>
       <sup><span class="inline-block w-4 text-end">{subbeat}</span></sup
@@ -104,7 +118,9 @@
     </Button>
   </div>
   <div>
-    <Button>New Chart</Button>
+    <Button onclick={() => {
+        danceManager.createChart();
+    }}>New Chart</Button>
     <Button onclick={() => {
         const input = document.createElement("input");
         input.style.display = "none";

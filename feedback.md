@@ -18,3 +18,15 @@ See [this reddit thread](https://www.reddit.com/r/rhythmgames/comments/1luzkbj/w
 - Have custom hit sounds, custom bar visuals, etc.
 - People hate it when online is mandatory. They like having an offline mode
 - Have many features and songs for players to practice on all levels. Not just for beginners.
+- Enforce a fun, welcoming community
+- People like having multiple difficulties for a single song. The difficulty levels should be consistent. Maybe some kind of definition for what makes easy, medium, hard, ultra, etc.
+- No gimmicks. Just clean gameplay
+- Should definitely have audio lag / timing calibration
+- Players love having lots of customization options for the controls.
+- Have songs and charts for all levels.
+- There should be a quick restart hotkey. No fancy animation or shit like that. Just clean quick restart.
+- Have adjustable speed (song and chart) for practicing.
+- NO COMBO SCORING
+- But at the same time, also have some other system that encourages players to strive for perfection, like having a counter for the number of misses. Have real incentive to get good.
+- The scoring should be about accuracy. A score should really tell you something about how good a player is.
+- Have an easily readable score. You can have additional info that is presented on the player's request. But by default, it should be a very siple main score.

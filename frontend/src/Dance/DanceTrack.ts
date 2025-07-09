@@ -20,7 +20,7 @@ import { AudioVisualizer, audioVisualizer } from './AudioVisualizer';
 export type SnappingInterval = 1 | 2 | 4 | 8 | 16 | 32 | 64;
 
 export class DanceTrack extends EventEmitter {
-    static NUM_BEATS_BEFORE = 5;
+    static NUM_BEATS_BEFORE = 10;
     static NUM_BEATS_AFTER = 0.5;
     static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
 
@@ -288,6 +288,7 @@ export class DanceTrack extends EventEmitter {
     }
 
     setWaveformBackground() {
+        this.spectrogramContainer.removeChildren();
         for (const [index, canvas] of audioVisualizer.waveformCanvases.entries()) {
             const texture = Texture.from(canvas);
             const sprite = new Sprite(texture);
