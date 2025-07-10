@@ -102,8 +102,6 @@ export class AudioVisualizer {
             ctx.stroke();
             ctx.fill();
         }
-        logger.debug(`Should be: ${this.getVisualizationLength()}`);
-        logger.debug(`Is: ${this.waveformData.length}`);
     }
 
     async load(audioBuffer: AudioBuffer) {

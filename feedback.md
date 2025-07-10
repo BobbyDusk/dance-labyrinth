@@ -30,3 +30,4 @@ See [this reddit thread](https://www.reddit.com/r/rhythmgames/comments/1luzkbj/w
 - But at the same time, also have some other system that encourages players to strive for perfection, like having a counter for the number of misses. Have real incentive to get good.
 - The scoring should be about accuracy. A score should really tell you something about how good a player is.
 - Have an easily readable score. You can have additional info that is presented on the player's request. But by default, it should be a very siple main score.
+- Help players get better through training, statistics, instant feedback and such. Maybe have some kind of mode that shows them where they messed up last time and maybe slows that part down or gives extra encouragements or maybe somewith with color coding the parts that they often mess up.

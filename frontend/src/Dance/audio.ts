@@ -1,3 +1,6 @@
+// @ts-ignore
+import toWav from 'audiobuffer-to-wav';
+
 export function addSilenceToAudio(audioBuffer: AudioBuffer, silenceDuration: number): AudioBuffer {
     const sampleRate = audioBuffer.sampleRate;
     const silenceSamples = Math.floor(sampleRate * silenceDuration);
@@ -25,8 +28,7 @@ export async function audioBufferToBase64Url(audioBuffer: AudioBuffer): Promise<
     const audioContext = new AudioContext();
     try {
         let monoAudioBuffer = await stereoToMono(audioBuffer);
-        let arrayBufferView = monoAudioBuffer.getChannelData(0);
-        const blob = new Blob([arrayBufferView], { type: 'audio/wav' });
+        let blob = new Blob([toWav(monoAudioBuffer)], { type: 'audio/wav' });
         const reader = new FileReader();
 
         return await new Promise<string>((resolve, reject) => {
