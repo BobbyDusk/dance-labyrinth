@@ -64,6 +64,7 @@ export class Metronome extends EventEmitter {
         this.beat = beat + spilledBeats;
         this.subbeat = subbeat;
         this.emit("beat", { beat: this.beat, subbeat: this.subbeat } as Beat);
+        this.emit("setBeat", { beat: this.beat, subbeat: this.subbeat } as Beat);
     }
 
     start() {

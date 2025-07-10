@@ -1,10 +1,20 @@
 import logger from "../Logger";
 import { Howl } from "howler";
+import { metronome, Metronome } from "../Metronome";
+import type { Beat } from "../Metronome";
 
 export class Song {
     private howl: Howl | null = null;
 
     constructor() {
+        metronome.on("setBeat", ({beat, subbeat}: Beat) => {
+            if (this.howl) {
+                const targetTime = metronome.beatToMs(beat, subbeat);
+                this.howl.seek(targetTime / 1000);
+            } else {
+                logger.error("No audio loaded to seek.");
+            }
+        });
     }
 
     load(url: string): void {
