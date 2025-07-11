@@ -3,7 +3,6 @@
 - don't do silly dance at the start
 
 # game
-- add scroll down option
 
 # General notes about rhythm games
 See [this reddit thread](https://www.reddit.com/r/rhythmgames/comments/1luzkbj/what_are_things_that_bother_you_about_rhythm_games/)
@@ -31,3 +30,6 @@ See [this reddit thread](https://www.reddit.com/r/rhythmgames/comments/1luzkbj/w
 - The scoring should be about accuracy. A score should really tell you something about how good a player is.
 - Have an easily readable score. You can have additional info that is presented on the player's request. But by default, it should be a very siple main score.
 - Help players get better through training, statistics, instant feedback and such. Maybe have some kind of mode that shows them where they messed up last time and maybe slows that part down or gives extra encouragements or maybe somewith with color coding the parts that they often mess up.
+
+# ideas
+- maybe have an AI that automatically generates a chart. It's basically a matter of creating a database of audiofiles with corresponding charts. Maybe also waveform and or spectrogram dtaa available. The AI should be able ot detect when to place a note where. 

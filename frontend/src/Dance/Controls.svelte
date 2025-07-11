@@ -17,6 +17,8 @@
   let bpm = $state(120);
   let snappingInterval: SnappingInterval = $state(danceTrack.snappingInterval);
   let orientation: Orientation = $state(danceTrack.orientation);
+  let linesVisible = $state(danceTrack.linesVisible);
+  let waveformVisible = $state(danceTrack.waveformVisible);
 
   onMount(() => {
     metronome.on("beat", updateBeat);
@@ -117,10 +119,13 @@
     </Button>
   </div>
   <div>
-    <Button onclick={() => {
+    <Button
+      onclick={() => {
         danceManager.createChart();
-    }}>New Chart</Button>
-    <Button onclick={() => {
+      }}>New Chart</Button
+    >
+    <Button
+      onclick={() => {
         const input = document.createElement("input");
         input.style.display = "none";
         input.type = "file";
@@ -132,25 +137,26 @@
           }
         };
         input.click();
-    }}>Load Song</Button>
+      }}>Load Song</Button
+    >
   </div>
   <div>
     <label for="snappingInterval" class="text-lg"> Snapping Interval: </label>
     <select
       id="snappingInterval"
       bind:value={snappingInterval}
-      class="w-16"
+      class="w-32"
       onchange={() => {
         danceTrack.snappingInterval = snappingInterval;
       }}
     >
-      <option value={1}>1</option>
-      <option value={2}>2</option>
-      <option value={4}>4</option>
-      <option value={8}>8</option>
-      <option value={16}>16</option>
-      <option value={32}>32</option>
-      <option value={64}>64</option>
+      <option value={1}>1 / 64 beat</option>
+      <option value={2}>1 / 32 beat</option>
+      <option value={4}>1 / 16 beat</option>
+      <option value={8}>1 / 8 beat</option>
+      <option value={16}>1 / 4 beat</option>
+      <option value={32}>1 / 2 beat</option>
+      <option value={64}>1 beat</option>
     </select>
   </div>
   <div>
@@ -166,6 +172,30 @@
       <option value={Orientation.DOWN}>Scroll Down</option>
       <option value={Orientation.UP}>Scroll Up</option>
     </select>
+  </div>
+  <div class="flex flex-col gap-1/2">
+    <label for="linesVisible" class="text-lg">
+      Show Lines:
+      <input
+        type="checkbox"
+        id="linesVisible"
+        bind:checked={linesVisible}
+        onchange={() => {
+          danceTrack.linesVisible = linesVisible;
+        }}
+      />
+    </label>
+    <label for="waveformVisible" class="text-lg">
+      Show Waveform:
+      <input
+        type="checkbox"
+        id="waveformVisible"
+        bind:checked={waveformVisible}
+        onchange={() => {
+          danceTrack.waveformVisible = waveformVisible;
+        }}
+      />
+    </label>
   </div>
 
   <!--

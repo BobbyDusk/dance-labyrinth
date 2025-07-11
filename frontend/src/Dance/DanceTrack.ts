@@ -256,7 +256,9 @@ export class DanceTrack extends EventEmitter {
         for (let i = -DanceTrack.NUM_BEATS_AFTER * Metronome.NUM_SUBBEATS + 1; i < DanceTrack.NUM_BEATS_BEFORE * Metronome.NUM_SUBBEATS; i++) {
             let y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats + this.distanceBetweenSubbeats * i;
             let lightnessValue;
-            if (i % Metronome.NUM_SUBBEATS == 0) {
+            if (i == 0 ) {
+                lightnessValue = 1; // Highlight the current beat line
+            } else if (i % Metronome.NUM_SUBBEATS == 0) {
                 lightnessValue = 0.5
             } else if (i % (Metronome.NUM_SUBBEATS / 2) == 0) {
                 lightnessValue = 0.3
@@ -317,13 +319,13 @@ export class DanceTrack extends EventEmitter {
     }
 
     setWaveformBackground() {
-        this.spectrogramContainer.removeChildren();
+        this.waveformContainer.removeChildren();
         for (const [index, canvas] of audioVisualizer.waveformCanvases.entries()) {
             const texture = Texture.from(canvas);
             const sprite = new Sprite(texture);
             sprite.label = "waveformBackground";
             sprite.y = index * AudioVisualizer.CANVAS_LENGTH;
-            this.spectrogramContainer.addChild(sprite);
+            this.waveformContainer.addChild(sprite);
         }
     }
 
@@ -400,6 +402,25 @@ export class DanceTrack extends EventEmitter {
         } else {
             this.viewport.bottom = this.app.screen.height - value;
         }
+    }
+
+    get linesVisible(): boolean {
+        return this.staticBackgroundContainer.getChildByLabel("lines")?.visible ?? true;
+    }
+
+    set linesVisible(value: boolean) {
+        logger.debug(`Setting lines visibility to ${value}`);
+        let lines = this.staticBackgroundContainer.getChildByLabel("lines");
+        lines!.visible = value;
+    }
+
+    get waveformVisible(): boolean {
+        return this.waveformContainer.visible;
+    }
+
+    set waveformVisible(value: boolean) {
+        logger.debug(`Setting waveform visibility to ${value}`);
+        this.waveformContainer.visible = value;
     }
 }
 
