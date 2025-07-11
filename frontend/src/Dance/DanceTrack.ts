@@ -1,4 +1,4 @@
-import { Application, Graphics, Color, Container, Point, FederatedPointerEvent, Texture, Sprite, getAdjustedBlendModeBlend } from 'pixi.js';
+import { Application, Graphics, Color, Container, Point, FederatedPointerEvent, Texture, Sprite, getAdjustedBlendModeBlend, FillGradient, Assets } from 'pixi.js';
 import { NoteBlock } from './NoteBlock';
 import logger from '../Logger';
 import { metronome, Metronome } from '../Metronome';
@@ -82,6 +82,10 @@ export class DanceTrack extends EventEmitter {
 
     private setupStructure() {
         this.staticBackgroundContainer.label = "staticBackground";
+        let background = this.createBackground();
+        background.label = "background";
+        background.zIndex = -20;
+        this.staticBackgroundContainer.addChild(background);
         this.app.stage.addChild(this.staticBackgroundContainer);
         this.targetBlocksContainer.label = "targetBlocks";
         this.staticForegroundContainer.addChild(this.targetBlocksContainer);
@@ -153,19 +157,29 @@ export class DanceTrack extends EventEmitter {
         });
     }
 
+    private createBackground(): Sprite {
+        const texture = Assets.get('track_background');
+        let sprite = new Sprite(texture);
+        sprite.anchor.set(0.5);
+        sprite.x = this.app.screen.width / 2;
+        sprite.y = this.app.screen.height / 2;
+        sprite.alpha = 0.25;
+        return sprite;
+    }
+
     private updateWhileDragging() {
         this.viewportY = Math.max(0, this.viewportY);
         metronome.setBeat(this.yToBeat(this.viewportY, false));
     }
 
     private updateGhostBlock(event: FederatedPointerEvent) {
-            if (!this.dragging && metronome.stopped) {
-                this.ghostBlock.graphics.visible = true;
-                this.ghostBlock.lane = Math.floor(event.screen.x / (this.app.screen.width / 4)) as Lane;
-                this.ghostBlock.setBeat(this.yToBeat(this.screenYToTrackY(event.screen.y), true));
-            } else {
-                this.ghostBlock.graphics.visible = false;
-            }
+        if (!this.dragging && metronome.stopped) {
+            this.ghostBlock.graphics.visible = true;
+            this.ghostBlock.lane = Math.floor(event.screen.x / (this.app.screen.width / 4)) as Lane;
+            this.ghostBlock.setBeat(this.yToBeat(this.screenYToTrackY(event.screen.y), true));
+        } else {
+            this.ghostBlock.graphics.visible = false;
+        }
     }
 
     private addBlockAtGhostLocation() {
@@ -222,7 +236,7 @@ export class DanceTrack extends EventEmitter {
         let width = this.app.screen.width / 4;
         lanes.forEach((lane: Lane) => {
             let target = new Graphics()
-            target.setStrokeStyle({width: 3, color: 0xFFFFFF, alpha: 0.5})
+            target.setStrokeStyle({ width: 3, color: 0xFFFFFF, alpha: 0.5 })
                 .moveTo(0, 0)
                 .lineTo(width, 0)
                 .moveTo(0, NoteBlock.HEIGHT_IN_SUBBEATS * this.distanceBetweenSubbeats)

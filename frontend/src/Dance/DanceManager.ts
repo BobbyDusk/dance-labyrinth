@@ -78,6 +78,10 @@ export class DanceManager {
         this.updateChart();
     }
 
+    done() {
+        this.reset();
+    }
+
     press(lane: Lane) {
         logger.info(`Pressed ${lane} at beat ${metronome.beat}, subbeat ${metronome.subbeat}`);
         danceTrack.lightUpLane(lane)
