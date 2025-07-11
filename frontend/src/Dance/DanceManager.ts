@@ -9,6 +9,8 @@ import { beatDetector } from "./BeatDetector";
 import { audioVisualizer } from "./AudioVisualizer";
 import { song } from "./Song";
 import { addSilenceToAudio, audioBufferToBase64Url } from "./audio";
+import { settingsManager } from "./Settings";
+import delay from "delay";
 
 enum PressQuality {
     Perfect = "Perfect",
@@ -40,6 +42,7 @@ export class DanceManager {
         await danceTrack.setup();
         this.updateFromChart();
         metronome.on("beat", this.updateOnBeat);
+        settingsManager.load();
     }
 
     start() {

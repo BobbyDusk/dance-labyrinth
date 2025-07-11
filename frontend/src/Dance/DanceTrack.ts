@@ -412,6 +412,7 @@ export class DanceTrack extends EventEmitter {
         logger.debug(`Setting lines visibility to ${value}`);
         let lines = this.staticBackgroundContainer.getChildByLabel("lines");
         lines!.visible = value;
+        this.emit("linesVisibilityChanged", value);
     }
 
     get waveformVisible(): boolean {
@@ -421,6 +422,7 @@ export class DanceTrack extends EventEmitter {
     set waveformVisible(value: boolean) {
         logger.debug(`Setting waveform visibility to ${value}`);
         this.waveformContainer.visible = value;
+        this.emit("waveformVisibilityChanged", value);
     }
 }
 
