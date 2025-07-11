@@ -363,6 +363,10 @@ export class DanceTrack extends EventEmitter {
         this.staticBackgroundContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
         this.staticForegroundContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
         this.staticForegroundContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
+        this.waveformContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
+        this.waveformContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
+        this.spectrogramContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
+        this.spectrogramContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
         this.blocksContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
         this.blocksContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
         this.ghostBlockContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
