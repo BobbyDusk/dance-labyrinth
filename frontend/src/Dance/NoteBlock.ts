@@ -10,7 +10,7 @@ import { danceManager } from "./DanceManager";
 
 
 export class NoteBlock {
-    static HEIGHT = 25;
+    static HEIGHT_IN_SUBBEATS = 8;
 
     graphics: Graphics
     #beat!: number
@@ -82,8 +82,8 @@ export class NoteBlock {
     private createGraphic(): Graphics {
         let rect = new Graphics()
         let width = danceTrack.app.screen.width / 4;
-        rect.setFillStyle({color: 0xFFFFFF}).rect(0, 0, width, NoteBlock.HEIGHT).fill()
-        rect.pivot.set(width / 2, NoteBlock.HEIGHT / 2);
+        rect.setFillStyle({color: 0xFFFFFF}).rect(0, 0, width, NoteBlock.HEIGHT_IN_SUBBEATS * danceTrack.distanceBetweenSubbeats).fill()
+        rect.pivot.set(width / 2, NoteBlock.HEIGHT_IN_SUBBEATS * danceTrack.distanceBetweenSubbeats / 2);
         rect.cullable = true;
         rect.eventMode = "static";
         rect.cursor = 'url(delete-cursor.png), pointer';

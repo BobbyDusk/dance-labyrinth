@@ -25,7 +25,7 @@ export enum Orientation {
 
 export class DanceTrack extends EventEmitter {
     static NUM_BEATS_BEFORE = 10;
-    static NUM_BEATS_AFTER = 1;
+    static NUM_BEATS_AFTER = 0.5;
     static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
 
     #snappingInterval: SnappingInterval = 16;
@@ -225,10 +225,10 @@ export class DanceTrack extends EventEmitter {
             target.setStrokeStyle({width: 3, color: 0xFFFFFF, alpha: 0.5})
                 .moveTo(0, 0)
                 .lineTo(width, 0)
-                .moveTo(0, NoteBlock.HEIGHT)
-                .lineTo(width, NoteBlock.HEIGHT)
+                .moveTo(0, NoteBlock.HEIGHT_IN_SUBBEATS * this.distanceBetweenSubbeats)
+                .lineTo(width, NoteBlock.HEIGHT_IN_SUBBEATS * this.distanceBetweenSubbeats)
                 .stroke();
-            target.pivot.set(width / 2, NoteBlock.HEIGHT / 2);
+            target.pivot.set(width / 2, NoteBlock.HEIGHT_IN_SUBBEATS * this.distanceBetweenSubbeats / 2);
             target.label = `blockTarget-${lane}`;
             target.tint = LANE_COLORS[lane];
             target.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
