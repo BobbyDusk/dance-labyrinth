@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { danceManager } from "./DanceManager";
-  import { danceTrack } from "./DanceTrack";
+  import { danceTrack, Orientation } from "./DanceTrack";
   import type { SnappingInterval } from "./DanceTrack";
   import { Metronome, metronome } from "../Metronome";
   import logger from "../Logger";
@@ -11,12 +11,12 @@
   import delay from "delay";
 
   let paused = $state(true);
-  let offset = $state(0);
   let beat = $state(0);
   let subbeat = $state(0);
   let time = $state(0);
   let bpm = $state(120);
   let snappingInterval: SnappingInterval = $state(danceTrack.snappingInterval);
+  let orientation: Orientation = $state(danceTrack.orientation);
 
   onMount(() => {
     metronome.on("beat", updateBeat);
@@ -55,7 +55,6 @@
 
 <div class="flex flex-col gap-4 p-4">
   <div>
-    <p>offset: </p>
     <label for="bpm">bpm: </label>
     <input
       type="number"
@@ -154,6 +153,21 @@
       <option value={64}>64</option>
     </select>
   </div>
+  <div>
+    <label for="orientation" class="text-lg"> Orientation: </label>
+    <select
+      id="orientation"
+      bind:value={orientation}
+      class="w-32"
+      onchange={() => {
+        danceTrack.orientation = orientation;
+      }}
+    >
+      <option value={Orientation.DOWN}>Scroll Down</option>
+      <option value={Orientation.UP}>Scroll Up</option>
+    </select>
+  </div>
+
   <!--
   <div>
     <label for="scale" class="text-lg"> scale: </label>

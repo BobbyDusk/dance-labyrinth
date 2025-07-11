@@ -1,4 +1,4 @@
-import { Application, Graphics, Color, Container, Point, FederatedPointerEvent, Texture, Sprite } from 'pixi.js';
+import { Application, Graphics, Color, Container, Point, FederatedPointerEvent, Texture, Sprite, getAdjustedBlendModeBlend } from 'pixi.js';
 import { NoteBlock } from './NoteBlock';
 import logger from '../Logger';
 import { metronome, Metronome } from '../Metronome';
@@ -15,24 +15,31 @@ import { AudioVisualizer, audioVisualizer } from './AudioVisualizer';
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
 // animation for missing notes
 // animation for pressing without a note
-// different colors for the 4 columns
 
 export type SnappingInterval = 1 | 2 | 4 | 8 | 16 | 32 | 64;
 
+export enum Orientation {
+    UP = "up",
+    DOWN = "down",
+}
+
 export class DanceTrack extends EventEmitter {
     static NUM_BEATS_BEFORE = 10;
-    static NUM_BEATS_AFTER = 0.5;
+    static NUM_BEATS_AFTER = 1;
     static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
 
     #snappingInterval: SnappingInterval = 16;
+    #orientation: Orientation = Orientation.UP;
 
     app: Application = new Application()
     blocks: NoteBlock[] = [];
     lightLanes: LightLane[] = []
 
-    backgroundContainer: Container = new Container();
+    staticBackgroundContainer: Container = new Container();
+    targetBlocksContainer: Container = new Container();
     viewport!: Viewport;
-    foregroundContainer: Container = new Container();
+    movingForegroundContainer: Container = new Container();
+    staticForegroundContainer: Container = new Container();
     blocksContainer: Container = new Container();
     waveformContainer: Container = new Container();
     spectrogramContainer: Container = new Container();
@@ -72,8 +79,10 @@ export class DanceTrack extends EventEmitter {
     }
 
     private setupStructure() {
-        this.backgroundContainer.label = "background";
-        this.app.stage.addChild(this.backgroundContainer);
+        this.staticBackgroundContainer.label = "staticBackground";
+        this.app.stage.addChild(this.staticBackgroundContainer);
+        this.targetBlocksContainer.label = "targetBlocks";
+        this.staticForegroundContainer.addChild(this.targetBlocksContainer);
         this.viewport = new Viewport({
             screenWidth: this.app.screen.width,
             screenHeight: this.app.screen.height,
@@ -89,17 +98,19 @@ export class DanceTrack extends EventEmitter {
                 mouseButtons: "right",
             });
         this.viewport.options.disableOnContextMenu = true;
-        this.foregroundContainer.label = "foreground";
-        this.foregroundContainer.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
-        this.viewport.addChild(this.foregroundContainer);
+        this.movingForegroundContainer.label = "movingForeground";
+        this.movingForegroundContainer.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
+        this.viewport.addChild(this.movingForegroundContainer);
+        this.staticForegroundContainer.label = "staticForeground";
+        this.app.stage.addChild(this.staticForegroundContainer);
         this.blocksContainer.label = "blocks";
-        this.foregroundContainer.addChild(this.blocksContainer);
+        this.movingForegroundContainer.addChild(this.blocksContainer);
         this.waveformContainer.label = "waveform";
         this.waveformContainer.zIndex = -10
-        this.foregroundContainer.addChild(this.waveformContainer);
+        this.movingForegroundContainer.addChild(this.waveformContainer);
         this.spectrogramContainer.label = "spectrogram";
         this.spectrogramContainer.zIndex = -10;
-        this.foregroundContainer.addChild(this.spectrogramContainer);
+        this.movingForegroundContainer.addChild(this.spectrogramContainer);
         this.viewport.on("drag-start", () => {
             logger.debug(`viewport drag started`);
             this.dragging = true;
@@ -128,7 +139,7 @@ export class DanceTrack extends EventEmitter {
         this.ghostBlock.graphics.cursor = 'url(add-cursor.png), pointer';
         this.ghostBlock.graphics.zIndex = -1;
         this.ghostBlock.graphics.off("mousedown");
-        this.foregroundContainer.addChild(this.ghostBlock.graphics);
+        this.movingForegroundContainer.addChild(this.ghostBlock.graphics);
         this.viewport.on("pointermove", (event: FederatedPointerEvent) => {
             this.updateGhostBlock(event);
         });
@@ -139,8 +150,8 @@ export class DanceTrack extends EventEmitter {
     }
 
     private updateWhileDragging() {
-        this.viewport.top = Math.max(0, this.viewport.top);
-        metronome.setBeat(this.yToBeat(this.viewport.top, false));
+        this.viewportY = Math.max(0, this.viewportY);
+        metronome.setBeat(this.yToBeat(this.viewportY, false));
     }
 
     private updateGhostBlock(event: FederatedPointerEvent) {
@@ -194,8 +205,8 @@ export class DanceTrack extends EventEmitter {
     }
 
     private snapViewportToSubbeat() {
-        let { beat, subbeat } = this.yToBeat(this.viewport.top, true);
-        this.viewport.top = this.beatToY({ beat, subbeat });
+        let { beat, subbeat } = this.yToBeat(this.viewportY, true);
+        this.update({ beat, subbeat });
         logger.debug(`snapped to beat: ${beat}, subbeat ${subbeat}`);
 
         metronome.stop();
@@ -218,7 +229,7 @@ export class DanceTrack extends EventEmitter {
             target.tint = LANE_COLORS[lane];
             target.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
             target.x = this.laneToX(lane);
-            this.app.stage.addChild(target);
+            this.targetBlocksContainer.addChild(target);
         })
     }
 
@@ -245,14 +256,14 @@ export class DanceTrack extends EventEmitter {
                 .stroke({ color: color, pixelLine: true });
         }
         graphics.label = "lines";
-        this.backgroundContainer.addChild(graphics);
+        this.staticBackgroundContainer.addChild(graphics);
     }
 
 
     private setupLightLanes() {
         let container = new Container();
         container.label = "lightLanes";
-        this.backgroundContainer.addChild(container);
+        this.staticBackgroundContainer.addChild(container);
         for (let i = 0; i < 4; i++) {
             this.lightLanes[i] = new LightLane(i as Lane);
             container.addChild(this.lightLanes[i].graphics);
@@ -268,7 +279,7 @@ export class DanceTrack extends EventEmitter {
 
     resetPosition() {
         logger.debug("Resetting position")
-        this.viewport.top = 0;
+        this.update({ beat: 0, subbeat: 0 });
     }
 
     lightUpLane(lane: Lane) {
@@ -303,7 +314,12 @@ export class DanceTrack extends EventEmitter {
     }
 
     private screenYToForegroundY(y: number): number {
-        return Math.max(0, this.viewport.top + y - DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats);
+        let adjustedY = this.orientation === Orientation.UP ? y : this.app.screen.height - y;
+        let offsetForBeatsAfter = -1 * DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
+        if (this.#orientation === Orientation.DOWN) {
+            offsetForBeatsAfter = -offsetForBeatsAfter;
+        }
+        return Math.max(0, this.viewportY + adjustedY + offsetForBeatsAfter);
     }
 
     private yToBeat(y: number, snapped = false): Beat {
@@ -320,12 +336,8 @@ export class DanceTrack extends EventEmitter {
         return beat * this.distanceBetweenBeats + subbeat * this.distanceBetweenSubbeats;
     }
 
-    private alignYToBeat(y: number, snapped = false): number {
-        return this.beatToY(this.yToBeat(y, snapped));
-    }
-
     update(beat: Beat) {
-        this.viewport.top = this.beatToY(beat);
+        this.viewportY = this.beatToY(beat);
     }
 
     get snappingInterval(): SnappingInterval {
@@ -339,6 +351,36 @@ export class DanceTrack extends EventEmitter {
         this.#snappingInterval = value;
         logger.debug(`Snapping interval set to ${this.#snappingInterval}`);
         this.emit("snappingIntervalChanged", this.#snappingInterval);
+    }
+
+    get orientation(): Orientation {
+        return this.#orientation;
+    }
+
+    set orientation(orientation: Orientation) {
+        this.#orientation = orientation;
+        this.staticBackgroundContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
+        this.staticBackgroundContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
+        this.staticForegroundContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
+        this.staticForegroundContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
+        this.blocksContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1
+        this.blocks.forEach(block => {
+            block.updatePosition();
+        });
+        logger.debug(`Orientation set to ${this.#orientation}`);
+        this.emit("orientationChanged", this.#orientation);
+    }
+
+    private get viewportY(): number {
+        return this.#orientation === Orientation.UP ? this.viewport.top : this.app.screen.height - this.viewport.bottom;
+    }
+
+    private set viewportY(value: number) {
+        if (this.#orientation === Orientation.UP) {
+            this.viewport.top = value;
+        } else {
+            this.viewport.bottom = this.app.screen.height - value;
+        }
     }
 }
 

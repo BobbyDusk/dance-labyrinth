@@ -72,6 +72,10 @@ export class NoteBlock {
     setBeat({beat, subbeat}: Beat) {
         this.beat = beat;
         this.subbeat = subbeat;
+        this.updatePosition();
+    }
+
+    updatePosition() {
         this.graphics.y = danceTrack.beatToY({beat: this.beat, subbeat: this.subbeat});
     }
 
