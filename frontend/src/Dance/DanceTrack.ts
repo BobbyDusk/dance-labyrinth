@@ -29,7 +29,7 @@ export class DanceTrack extends EventEmitter {
     static NUM_BEATS = DanceTrack.NUM_BEATS_BEFORE + DanceTrack.NUM_BEATS_AFTER;
 
     #snappingInterval: SnappingInterval = 16;
-    #orientation: Orientation = Orientation.UP;
+    #orientation: Orientation = Orientation.DOWN;
 
     app: Application = new Application()
     blocks: NoteBlock[] = [];
@@ -43,6 +43,7 @@ export class DanceTrack extends EventEmitter {
     blocksContainer: Container = new Container();
     waveformContainer: Container = new Container();
     spectrogramContainer: Container = new Container();
+    ghostBlockContainer: Container = new Container();
     ghostBlock!: NoteBlock;
 
     distanceBetweenBeats: number = 0;
@@ -76,6 +77,7 @@ export class DanceTrack extends EventEmitter {
         metronome.on("started", () => {
             this.ghostBlock.graphics.visible = false;
         })
+        this.orientation = this.orientation
     }
 
     private setupStructure() {
@@ -99,7 +101,6 @@ export class DanceTrack extends EventEmitter {
             });
         this.viewport.options.disableOnContextMenu = true;
         this.movingForegroundContainer.label = "movingForeground";
-        this.movingForegroundContainer.y = DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
         this.viewport.addChild(this.movingForegroundContainer);
         this.staticForegroundContainer.label = "staticForeground";
         this.app.stage.addChild(this.staticForegroundContainer);
@@ -130,16 +131,19 @@ export class DanceTrack extends EventEmitter {
             }, 250);
         })
         this.viewport.on("moved", () => this.updateWhileDragging());
+        this.ghostBlockContainer.label = "ghostBlockContainer";
+        this.ghostBlockContainer.zIndex = -1;
+        this.movingForegroundContainer.addChild(this.ghostBlockContainer);
         this.ghostBlock = new NoteBlock({
             beat: 0,
             subbeat: 0,
             lane: 0,
         })
+        this.ghostBlock.graphics.label = "ghostBlock";
         this.ghostBlock.graphics.alpha = 0.5;
         this.ghostBlock.graphics.cursor = 'url(add-cursor.png), pointer';
-        this.ghostBlock.graphics.zIndex = -1;
         this.ghostBlock.graphics.off("mousedown");
-        this.movingForegroundContainer.addChild(this.ghostBlock.graphics);
+        this.ghostBlockContainer.addChild(this.ghostBlock.graphics);
         this.viewport.on("pointermove", (event: FederatedPointerEvent) => {
             this.updateGhostBlock(event);
         });
@@ -158,7 +162,7 @@ export class DanceTrack extends EventEmitter {
             if (!this.dragging && metronome.stopped) {
                 this.ghostBlock.graphics.visible = true;
                 this.ghostBlock.lane = Math.floor(event.screen.x / (this.app.screen.width / 4)) as Lane;
-                this.ghostBlock.setBeat(this.yToBeat(this.screenYToForegroundY(event.screen.y), true));
+                this.ghostBlock.setBeat(this.yToBeat(this.screenYToTrackY(event.screen.y), true));
             } else {
                 this.ghostBlock.graphics.visible = false;
             }
@@ -313,13 +317,9 @@ export class DanceTrack extends EventEmitter {
         return this.app.screen.width / 8 * (lane * 2 + 1);
     }
 
-    private screenYToForegroundY(y: number): number {
+    private screenYToTrackY(y: number): number {
         let adjustedY = this.orientation === Orientation.UP ? y : this.app.screen.height - y;
-        let offsetForBeatsAfter = -1 * DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
-        if (this.#orientation === Orientation.DOWN) {
-            offsetForBeatsAfter = -offsetForBeatsAfter;
-        }
-        return Math.max(0, this.viewportY + adjustedY + offsetForBeatsAfter);
+        return Math.max(0, this.viewportY + adjustedY + (this.orientation === Orientation.UP ? -1 : 1) * this.movingForegroundContainer.position.y);
     }
 
     private yToBeat(y: number, snapped = false): Beat {
@@ -363,10 +363,11 @@ export class DanceTrack extends EventEmitter {
         this.staticBackgroundContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
         this.staticForegroundContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
         this.staticForegroundContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
-        this.blocksContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1
-        this.blocks.forEach(block => {
-            block.updatePosition();
-        });
+        this.blocksContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
+        this.blocksContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
+        this.ghostBlockContainer.scale.y = this.#orientation === Orientation.UP ? 1 : -1;
+        this.ghostBlockContainer.position.y = this.#orientation === Orientation.UP ? 0 : this.app.screen.height;
+        this.movingForegroundContainer.position.y = this.#orientation === Orientation.UP ? DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats : -DanceTrack.NUM_BEATS_AFTER * this.distanceBetweenBeats;
         logger.debug(`Orientation set to ${this.#orientation}`);
         this.emit("orientationChanged", this.#orientation);
     }
