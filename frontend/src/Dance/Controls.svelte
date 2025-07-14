@@ -34,6 +34,18 @@
     danceManager.chart.on("loaded", (chart) => {
       bpm = chart.bpm;
     });
+    danceTrack.on("snappingIntervalChanged", (newInterval) => {
+      snappingInterval = newInterval;
+    });
+    danceTrack.on("orientationChanged", (newOrientation) => {
+      orientation = newOrientation;
+    });
+    danceTrack.on("linesVisibilityChanged", (visible) => {
+      linesVisible = visible;
+    });
+    danceTrack.on("waveformVisibilityChanged", (visible) => {
+      waveformVisible = visible;
+    });
   });
 
   function updateBeat() {

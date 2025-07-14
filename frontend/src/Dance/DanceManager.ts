@@ -40,9 +40,9 @@ export class DanceManager {
             logger.debug("Failed to load chart from local storage, loading default chart.");
         }
         await danceTrack.setup();
+        settingsManager.load();
         this.updateFromChart();
         metronome.on("beat", this.updateOnBeat);
-        settingsManager.load();
     }
 
     start() {

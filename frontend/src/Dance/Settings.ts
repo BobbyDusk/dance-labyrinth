@@ -14,6 +14,8 @@ export class SettingsManager {
 
     constructor() {
         this.settings = SettingsManager.defaultSettings;
+        const settings = localStorage.getItem('danceSettings');
+        this.settings = settings ? JSON.parse(settings) : SettingsManager.defaultSettings;
         danceTrack.on("linesVisibilityChanged", (visible: boolean) => {
             this.settings.linesVisible = visible;
             this.save();
