@@ -37,3 +37,6 @@ Dance dance revolution combined with navigating a maze. You're only allowed to m
   - multiplayer labyrinth race
   - multiplayer bomberman 
 - support for controller and dance (DDR) mat. Imagine dancing with feet and moving with controller
+
+# Tauri
+[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).

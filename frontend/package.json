@@ -1,5 +1,6 @@
 {
-  "name": "dance-labyrinth",
+  "name": "dancetopia",
+  "description": "MMO rhythm game",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,11 +8,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "tauri": "tauri"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.1.0",
     "@tailwindcss/vite": "^4.1.10",
+    "@tauri-apps/cli": "^2",
     "@tsconfig/svelte": "^5.0.4",
     "@types/howler": "^2.2.12",
     "pino-pretty": "^13.0.0",
@@ -23,6 +26,8 @@
   },
   "packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184",
   "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
     "audiobuffer-to-wav": "^1.0.0",
     "delay": "^6.0.0",
     "eventemitter3": "^5.0.1",
