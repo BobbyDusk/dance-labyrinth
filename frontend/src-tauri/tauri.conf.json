@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "dancetopia",
+  "productName": "Dancetopia",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "online.dancetopia",
   "build": {
     "frontendDist": "../public",
     "devUrl": "http://localhost:5173",
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "dancetopia",
+        "title": "Dancetopia",
         "width": 800,
         "height": 600,
         "resizable": true,

@@ -1,3 +1,3 @@
-package com.tauri.dev
+package online.dancetopia
 
 class MainActivity : TauriActivity()

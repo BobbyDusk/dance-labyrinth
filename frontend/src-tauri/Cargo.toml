@@ -1,8 +1,8 @@
 [package]
-name = "app"
+name = "Dancetopia"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Dancetopia, an MMO rhythm game"
+authors = ["Bobby Dusk"]
 license = ""
 repository = ""
 edition = "2021"
