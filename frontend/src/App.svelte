@@ -17,7 +17,7 @@
   onMount(async () => {
     await preloadAssets();
     setupInput();
-    await danceManager.setup();
+    await danceManager.setup(musicContainer!);
     musicContainer!.appendChild(danceTrack.app.canvas);
 
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -27,7 +27,7 @@
 
 <main class="flex h-screen justify-center items-center gap-2">
   <div class="self-start hidden" bind:this={labyrinthContainer}></div>
-  <div class="self-bottom" bind:this={musicContainer}></div>
+  <div class="self-bottom" bind:this={musicContainer} style="width: 600px; height: 1000px;"></div>
   <Controls />
   <button
     class="absolute top-0 right-0 m-4 bg-blue-500 text-white px-4 py-2 rounded"

@@ -33,13 +33,13 @@ export class DanceManager {
 
     constructor() { }
 
-    async setup() {
+    async setup(container: HTMLElement) {
         try {
             this.chart.loadFromLocalStorage();
         } catch (error) {
             logger.debug("Failed to load chart from local storage, loading default chart.");
         }
-        await danceTrack.setup();
+        await danceTrack.setup(container);
         settingsManager.load();
         this.updateFromChart();
         metronome.on("beat", this.updateOnBeat);

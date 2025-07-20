@@ -57,14 +57,13 @@ export class DanceTrack extends EventEmitter {
         super();
     }
 
-    async setup() {
+    async setup(container: HTMLElement) {
         // @ts-expect-error: Expose app for PixiJS devtools
         globalThis.__PIXI_APP__ = this.app; // for PixiJS devtools
         await this.app.init({
-            width: 600,
-            height: 1000,
             antialias: true,
             autoStart: true,
+            resizeTo: container,
         });
         this.distanceBetweenBeats = this.app.screen.height / DanceTrack.NUM_BEATS;
         this.distanceBetweenSubbeats = this.distanceBetweenBeats / Metronome.NUM_SUBBEATS;
