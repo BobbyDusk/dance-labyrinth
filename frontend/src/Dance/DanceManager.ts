@@ -10,7 +10,6 @@ import { audioVisualizer } from "./AudioVisualizer";
 import { song } from "./Song";
 import { addSilenceToAudio, audioBufferToBase64Url } from "./audio";
 import { settingsManager } from "./Settings";
-import delay from "delay";
 
 enum PressQuality {
     Perfect = "Perfect",

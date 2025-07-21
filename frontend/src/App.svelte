@@ -6,6 +6,8 @@
   import preloadAssets from "./assets";
   import Controls from "./Dance/Controls.svelte";
   import Button from "./Button.svelte";
+  import { metronome } from "./Metronome";
+  import uap from "./UAParser";
 
   let musicContainer: HTMLElement | undefined = $state();
   let labyrinthContainer: HTMLElement | undefined = $state();
@@ -16,6 +18,11 @@
     setupInput();
     await danceManager.setup(musicContainer!);
     musicContainer!.appendChild(danceTrack.app.canvas);
+    if (uap.device.is("mobile")) {
+      metronome.on("started", () => {
+        isEditorOpen = false;
+      })
+    }
   });
 </script>
 

@@ -7,6 +7,7 @@ import type { Beat } from "../Metronome";
 import { danceTrack } from "./DanceTrack";
 import { metronome } from "../Metronome";
 import { danceManager } from "./DanceManager";
+import logger from "../Logger";
 
 
 export class NoteBlock {
@@ -87,10 +88,11 @@ export class NoteBlock {
         rect.cullable = true;
         rect.eventMode = "static";
         rect.cursor = 'url(delete-cursor.png), pointer';
-        rect.on("pointerdown", (event) => {
+        rect.interactive = true;
+        rect.on("pointertap", (event) => {
             if (!danceTrack.dragging && metronome.stopped) {
-                danceTrack.removeBlock(this);
                 event.stopPropagation();
+                danceTrack.removeBlock(this);
             }
         });
         return rect;

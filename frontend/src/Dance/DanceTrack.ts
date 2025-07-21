@@ -126,8 +126,10 @@ export class DanceTrack extends EventEmitter {
         });
         this.viewport.on("drag-end", () => {
             logger.debug(`viewport drag ended`);
-            this.dragging = false;
             this.snapViewportToSubbeat()
+            setTimeout(() => {
+                this.dragging = false;
+            }, 100);
         });
         this.viewport.on("wheel-scroll", () => {
             if (this.scrollTimeout) {
@@ -146,6 +148,7 @@ export class DanceTrack extends EventEmitter {
             subbeat: 0,
             lane: 0,
         })
+        this.ghostBlock.graphics.interactive = false;
         this.ghostBlock.graphics.label = "ghostBlock";
         this.ghostBlock.graphics.alpha = 0.5;
         this.ghostBlock.graphics.cursor = 'url(add-cursor.png), pointer';
@@ -155,7 +158,7 @@ export class DanceTrack extends EventEmitter {
             this.updateGhostBlock(event);
         });
         this.viewport.cursor = 'url(add-cursor.png), pointer';
-        this.viewport.on("pointerdown", (event: FederatedPointerEvent) => {
+        this.viewport.on("pointertap", (event: FederatedPointerEvent) => {
             this.addBlockAtGhostLocation(event);
         });
     }
@@ -187,6 +190,7 @@ export class DanceTrack extends EventEmitter {
 
     private addBlockAtGhostLocation(event: FederatedPointerEvent) {
         if (!this.dragging && metronome.stopped) {
+            event.stopPropagation();
             this.updateGhostBlock(event);
             let doesBlockExist = this.blocks.some(block => {
                 return block.beat === this.ghostBlock.beat && block.subbeat === this.ghostBlock.subbeat && block.lane === this.ghostBlock.lane;

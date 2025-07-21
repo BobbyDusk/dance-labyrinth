@@ -17,7 +17,8 @@ export class LaneButton extends Input {
         this.graphics.label = `buttonLane-${this.lane}`;
         this.graphics.rect(this.lane * width, 0, width, height).fill({color: 0xFFFFFF, alpha: 0})
         this.graphics.interactive = false;
-        this.graphics.on('pointerdown', () => {
+        this.graphics.on('pointerdown', (event) => {
+            event.stopPropagation();
             logger.debug(`Button pressed on lane ${this.lane}`);
             this.notify();
         });
