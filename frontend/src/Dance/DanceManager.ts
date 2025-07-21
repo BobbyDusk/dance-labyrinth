@@ -50,6 +50,7 @@ export class DanceManager {
         this.paused = false;
         song.play();
         metronome.start();
+        danceTrack.enableLaneButtons();
     }
 
     pause() {
@@ -57,6 +58,7 @@ export class DanceManager {
         song.pause();
         this.resetBlocks();
         metronome.stop();
+        danceTrack.disableLaneButtons();
     }
 
     reset() {

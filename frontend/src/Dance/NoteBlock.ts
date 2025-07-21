@@ -87,7 +87,7 @@ export class NoteBlock {
         rect.cullable = true;
         rect.eventMode = "static";
         rect.cursor = 'url(delete-cursor.png), pointer';
-        rect.on("mousedown", (event) => {
+        rect.on("pointerdown", (event) => {
             if (!danceTrack.dragging && metronome.stopped) {
                 danceTrack.removeBlock(this);
                 event.stopPropagation();

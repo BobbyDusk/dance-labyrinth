@@ -10,6 +10,8 @@ import { LANE_COLORS } from './LaneColors';
 import EventEmitter from 'eventemitter3';
 import { danceManager } from './DanceManager';
 import { AudioVisualizer, audioVisualizer } from './AudioVisualizer';
+import { LaneButton } from './LaneButton';
+import uap from '../UAParser';
 
 // sudden death mode -> miss single note => restart
 // animation for hitting the notes correct (color and animation depending on perfect, good, ok and maybe also a sound effect)
@@ -34,6 +36,7 @@ export class DanceTrack extends EventEmitter {
     app: Application = new Application()
     blocks: NoteBlock[] = [];
     lightLanes: LightLane[] = []
+    laneButtons: LaneButton[] = [];
 
     staticBackgroundContainer: Container = new Container();
     targetBlocksContainer: Container = new Container();
@@ -72,6 +75,7 @@ export class DanceTrack extends EventEmitter {
         this.createLines();
         this.createBlockTargets();
         this.setupLightLanes();
+        this.setupLaneButtons();
 
         metronome.on("started", () => {
             this.ghostBlock.graphics.visible = false;
@@ -151,8 +155,8 @@ export class DanceTrack extends EventEmitter {
             this.updateGhostBlock(event);
         });
         this.viewport.cursor = 'url(add-cursor.png), pointer';
-        this.viewport.on("mousedown", (event: FederatedPointerEvent) => {
-            this.addBlockAtGhostLocation();
+        this.viewport.on("pointerdown", (event: FederatedPointerEvent) => {
+            this.addBlockAtGhostLocation(event);
         });
     }
 
@@ -173,7 +177,7 @@ export class DanceTrack extends EventEmitter {
 
     private updateGhostBlock(event: FederatedPointerEvent) {
         if (!this.dragging && metronome.stopped) {
-            this.ghostBlock.graphics.visible = true;
+            this.ghostBlock.graphics.visible = !uap.device.is("mobile");
             this.ghostBlock.lane = Math.floor(event.screen.x / (this.app.screen.width / 4)) as Lane;
             this.ghostBlock.setBeat(this.yToBeat(this.screenYToTrackY(event.screen.y), true));
         } else {
@@ -181,8 +185,9 @@ export class DanceTrack extends EventEmitter {
         }
     }
 
-    private addBlockAtGhostLocation() {
+    private addBlockAtGhostLocation(event: FederatedPointerEvent) {
         if (!this.dragging && metronome.stopped) {
+            this.updateGhostBlock(event);
             let doesBlockExist = this.blocks.some(block => {
                 return block.beat === this.ghostBlock.beat && block.subbeat === this.ghostBlock.subbeat && block.lane === this.ghostBlock.lane;
             });
@@ -278,7 +283,6 @@ export class DanceTrack extends EventEmitter {
         this.staticBackgroundContainer.addChild(graphics);
     }
 
-
     private setupLightLanes() {
         let container = new Container();
         container.label = "lightLanes";
@@ -287,6 +291,28 @@ export class DanceTrack extends EventEmitter {
             this.lightLanes[i] = new LightLane(i as Lane);
             container.addChild(this.lightLanes[i].graphics);
         }
+    }
+
+    private setupLaneButtons() {
+        let container = new Container();
+        container.label = "laneButtons";
+        this.staticForegroundContainer.addChild(container);
+        for (let i = 0; i < 4; i++) {
+            this.laneButtons[i] = new LaneButton(i as Lane);
+            container.addChild(this.laneButtons[i].graphics);
+        }
+    }
+
+    enableLaneButtons() {
+        this.laneButtons.forEach(button => {
+            button.enable();
+        });
+    }
+
+    disableLaneButtons() {
+        this.laneButtons.forEach(button => {
+            button.disable();
+        });
     }
 
     resetBlocks() {

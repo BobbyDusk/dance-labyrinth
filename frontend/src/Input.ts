@@ -1,10 +1,6 @@
 import logger from "./Logger";
 import EventEmitter from 'eventemitter3';
 
-export enum InputType {
-  KEYPRESS = "KeyPress",
-}
-
 export enum KeyPressType {
   DOWN = "down",
   UP = "up",
@@ -33,16 +29,7 @@ export class InputManager {
     this.inputGroups[name] = new InputGroup();
   }
 
-  addInput(inputGroupName: string, type: InputType, config: KeyPressConfig | ButtonConfig) {
-    let input: Input;
-    switch (type) {
-      case InputType.KEYPRESS:
-        input = new KeyPress((config as KeyPressConfig).key);
-        break;
-      default:
-        console.error(`Input type ${type} is not supported.`);
-        return;
-    }
+  addInput(inputGroupName: string, input: Input) {
     this.inputGroups[inputGroupName].addInput(input);
   }
 
@@ -69,13 +56,13 @@ class InputGroup extends EventEmitter {
 }
 
 // Single input
-class Input extends EventEmitter {
+export class Input extends EventEmitter {
   notify() {
     this.emit("executed");
   }
 }
 
-class KeyPress extends Input {
+export class KeyPress extends Input {
   constructor(public key: string, public type: KeyPressType = KeyPressType.DOWN) {
     super();
     document.addEventListener(type == KeyPressType.DOWN ? "keydown" : "keyup", (event: KeyboardEvent) => {

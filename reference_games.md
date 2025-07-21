@@ -16,3 +16,13 @@
 - Robeats
     - rhythm game in roblox
     - https://www.youtube.com/watch?v=ShE0mvbGT7w
+- Phigros
+  - laneless android rhythm game
+  - https://play.google.com/store/apps/details?id=com.PigeonGames.Phigros&hl=en_US
+- Arcaea
+  - android rhythm game
+  - https://play.google.com/store/apps/details?id=moe.low.arc&hl=en_US
+- Rotaeno
+  - Pretty cool 3D android rhythm game
+  - https://play.google.com/store/apps/details?id=com.xd.rotaeno.googleplay&hl=en_US
+- 
