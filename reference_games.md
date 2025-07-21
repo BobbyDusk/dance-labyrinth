@@ -1,0 +1,18 @@
+- Rhythm Plus
+  - Very cool online rhythm game
+  - https://rhythm-plus.com/
+- Touch Online
+  - MMO dance rhythm game
+  - https://mmos.com/review/touch-online
+- MStar
+  - MMO dance rhythm game
+  - https://www.youtube.com/watch?v=b_bMyP3kpvM
+- Audition online
+  - MMO dance rhythm game
+  - https://store.steampowered.com/app/349720/Audition_Online/
+- O2 JAM online
+  - MMO rhythm game
+  - https://store.steampowered.com/app/2016940/O2Jam_Online/
+- Robeats
+    - rhythm game in roblox
+    - https://www.youtube.com/watch?v=ShE0mvbGT7w
