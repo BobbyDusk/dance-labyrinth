@@ -32,7 +32,7 @@
     bind:this={musicContainer}
   ></div>
   {#if isEditorOpen}
-    <div class="absolute top-5 right-5 bg-white/70 rounded-xl backdrop-blur-sm shadow-lg">
+    <div class="absolute flex flex-col top-5 right-5 bg-white/70 rounded-xl backdrop-blur-sm shadow-lg p-5 gap-2">
       <Controls />
     </div>
   {/if}
